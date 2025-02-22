@@ -19,7 +19,7 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
 
-    from app.routes import main  # Import routes từ routes/main.py (đảm bảo có __init__.py)
+    from app.routes import main
     app.register_blueprint(main)
 
     return app
