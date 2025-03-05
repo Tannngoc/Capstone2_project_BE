@@ -28,6 +28,6 @@ jobs:
       run: |
         git config --global user.name "Tannngoc"
         git config --global user.email "github-actions@github.com"
-        git add stock_data_*.csv
+        git add *_stock.csv
         git commit -m "Update stock data [$(date)]" || echo "No changes to commit"
         git push origin feature/create_models

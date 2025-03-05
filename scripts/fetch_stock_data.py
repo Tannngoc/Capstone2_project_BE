@@ -38,6 +38,7 @@ def add_indicators(data):
 # Lặp qua từng cổ phiếu để cập nhật dữ liệu
 for ticker in tickers:
     file_path = f"{ticker}_stock.csv"
+    print(f"Đang lưu file tại: {os.path.abspath(file_path)}")
 
     # Kiểm tra nếu file đã tồn tại để đọc dữ liệu cũ
     if os.path.exists(file_path):
@@ -61,4 +62,3 @@ for ticker in tickers:
     df = df.tail(max_rows)
 
     df.to_csv(file_path, index=True, encoding='utf-8-sig')
-    print(f"Đã cập nhật dữ liệu cho {ticker} ({len(df)} dòng)")
