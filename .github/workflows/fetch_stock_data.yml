@@ -3,7 +3,7 @@ name: Fetch Stock Data Daily
 on:
   push:
     branches:
-      - develop
+      - feature/create_models
   schedule:
     - cron: '0 0 * * *'  # Chạy vào 00:00 UTC mỗi ngày
   workflow_dispatch:  # Cho phép chạy thủ công
