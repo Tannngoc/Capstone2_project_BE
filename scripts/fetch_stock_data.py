@@ -7,7 +7,7 @@ import os
 tickers = ['NVDA', 'TSLA', 'KO', 'IBM']
 max_rows = 2468
 
-save_dir = "db"
+save_dir = "app/db"
 os.makedirs(save_dir, exist_ok=True)
 
 def add_indicators(data):
