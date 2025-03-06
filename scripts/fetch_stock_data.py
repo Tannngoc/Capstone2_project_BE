@@ -5,13 +5,15 @@ import os
 
 # Danh sách mã cổ phiếu muốn lấy dữ liệu
 tickers = ['NVDA', 'TSLA', 'KO', 'IBM']
-max_rows = 2468  # Giới hạn số dòng tối đa
+max_rows = 2468
 
-# Hàm tính toán các chỉ báo kỹ thuật và trường dữ liệu bổ sung
+save_dir = "app/db"
+os.makedirs(save_dir, exist_ok=True)
+
 def add_indicators(data):
     data['SMA_20'] = data['Close'].rolling(window=20).mean()
     data['SMA_50'] = data['Close'].rolling(window=50).mean()
-
+    
     data['EMA_20'] = data['Close'].ewm(span=20, adjust=False).mean()
     data['EMA_50'] = data['Close'].ewm(span=50, adjust=False).mean()
 
@@ -35,9 +37,8 @@ def add_indicators(data):
     data.dropna(inplace=True)
     return data
 
-# Lặp qua từng cổ phiếu để cập nhật dữ liệu
 for ticker in tickers:
-    file_path = f"{ticker}_stock.csv"
+    file_path = os.path.join(save_dir, f"{ticker}_stock.csv")
     print(f"Đang lưu file tại: {os.path.abspath(file_path)}")
 
     # Kiểm tra nếu file đã tồn tại để đọc dữ liệu cũ
@@ -47,7 +48,7 @@ for ticker in tickers:
         df_old = pd.DataFrame()
 
     print(f"Đang lấy dữ liệu cho: {ticker}")
-    
+
     # Lấy dữ liệu mới nhất
     new_data = yf.download(ticker, period='10y', interval='1d')
 
@@ -62,3 +63,5 @@ for ticker in tickers:
     df = df.tail(max_rows)
 
     df.to_csv(file_path, index=True, encoding='utf-8-sig')
+
+print("Hoàn thành cập nhật dữ liệu!")
