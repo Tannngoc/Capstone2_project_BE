@@ -3,12 +3,12 @@ import pandas as pd
 import numpy as np
 import os
 
-# Danh sách mã cổ phiếu muốn lấy dữ liệu
-tickers = ['NVDA', 'TSLA', 'KO', 'IBM']
-max_rows = 2468
+# Danh sách mã cổ phiếu cần lấy dữ liệu
+TICKERS = ['NVDA', 'TSLA', 'KO', 'IBM']
+MAX_ROWS = 2468
 
-save_dir = "app/db"
-os.makedirs(save_dir, exist_ok=True)
+SAVE_DIR = "app/db"
+os.makedirs(SAVE_DIR, exist_ok=True)
 
 def add_indicators(data):
     """Thêm các chỉ báo kỹ thuật vào dữ liệu cổ phiếu"""
@@ -39,7 +39,7 @@ def add_indicators(data):
     return data
 
 def clean_csv(file_path):
-    """Xử lý lỗi định dạng trong file CSV"""
+    """Chuẩn hóa dữ liệu và xóa cột trùng lặp trong CSV"""
     if os.path.exists(file_path):
         df = pd.read_csv(file_path, index_col=0, parse_dates=True, low_memory=False)
         
@@ -55,8 +55,9 @@ def clean_csv(file_path):
         # Lưu lại file đã sửa
         df.to_csv(file_path, index=True, encoding='utf-8-sig', float_format="%.6f")
 
-for ticker in tickers:
-    file_path = os.path.join(save_dir, f"{ticker}_stock.csv")
+def fetch_stock_data(ticker):
+    """Lấy dữ liệu cổ phiếu từ Yahoo Finance"""
+    file_path = os.path.join(SAVE_DIR, f"{ticker}_stock.csv")
     print(f"📥 Đang lưu file tại: {os.path.abspath(file_path)}")
 
     # Đọc dữ liệu cũ (nếu có)
@@ -67,25 +68,39 @@ for ticker in tickers:
 
     print(f"🔄 Đang lấy dữ liệu cho: {ticker}")
 
-    # Lấy dữ liệu mới từ Yahoo Finance
-    new_data = yf.download(ticker, period='10y', interval='1d')
+    try:
+        # Lấy dữ liệu mới từ Yahoo Finance
+        new_data = yf.download(ticker, period='10y', interval='1d')
 
-    if new_data.empty:
-        print(f"⚠️ Không có dữ liệu mới cho {ticker}")
-        continue
+        if new_data.empty:
+            print(f"⚠️ Không có dữ liệu mới cho {ticker}")
+            return
 
-    new_data = add_indicators(new_data)
+        new_data = add_indicators(new_data)
 
-    # Gộp dữ liệu cũ và mới
-    df = pd.concat([df_old, new_data])
+        # Gộp dữ liệu cũ và mới, tránh trùng lặp
+        df = pd.concat([df_old, new_data]).drop_duplicates().sort_index()
 
-    # Giới hạn số dòng
-    df = df.tail(max_rows)
+        # Giới hạn số dòng
+        df = df.tail(MAX_ROWS)
 
-    # Lưu dữ liệu vào file CSV
-    df.to_csv(file_path, index=True, encoding='utf-8-sig')
+        # Kiểm tra nếu có MultiIndex thì reset về dạng thường
+        if isinstance(df.index, pd.MultiIndex):
+            df = df.reset_index()
 
-    # Sửa lỗi định dạng file CSV
-    clean_csv(file_path)
+        # Lưu dữ liệu vào file CSV
+        df.to_csv(file_path, index=True, encoding='utf-8-sig')
 
-print("✅ Hoàn thành cập nhật dữ liệu!")
+        # Chuẩn hóa lại file CSV
+        clean_csv(file_path)
+
+        print(f"✅ Đã cập nhật dữ liệu cho {ticker}")
+
+    except Exception as e:
+        print(f"❌ Lỗi khi lấy dữ liệu {ticker}: {e}")
+
+# Chạy script cho tất cả mã cổ phiếu
+for ticker in TICKERS:
+    fetch_stock_data(ticker)
+
+print("🎯 Hoàn thành cập nhật dữ liệu!")
