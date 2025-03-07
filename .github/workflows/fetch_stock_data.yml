@@ -36,8 +36,8 @@ jobs:
     - name: Switch to feature/create_models
       run: |
         git fetch --all
-        git checkout feature_create_models
-        git reset --hard origin/feature_create_models  # Reset về trạng thái mới nhất trên remote
+        git checkout feature/create_models
+        git reset --hard origin/feature/create_models  # Reset về trạng thái mới nhất trên remote
 
     - name: Commit and push new data
       run: |
@@ -48,6 +48,6 @@ jobs:
         git commit -m "Update stock data [$(date)]" || echo "No changes to commit"
 
         # Fetch và merge thay đổi từ remote trước khi push
-        git pull --no-edit --strategy-option=ours origin feature_create_models
+        git pull --no-edit --strategy-option=ours origin feature/create_models
 
-        git push origin feature_create_models
+        git push origin feature/create_models
