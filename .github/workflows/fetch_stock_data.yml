@@ -33,7 +33,7 @@ jobs:
       run: |
         git fetch --all  # Lấy tất cả nhánh từ remote
         git checkout feature/create_models
-        git pull origin feature_create_models  # Cập nhật code mới nhất từ remote
+        git pull origin feature/create_models  # Cập nhật code mới nhất từ remote
 
     - name: Commit and push new data
       run: |
