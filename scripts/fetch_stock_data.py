@@ -11,6 +11,7 @@ save_dir = "app/db"
 os.makedirs(save_dir, exist_ok=True)
 
 def add_indicators(data):
+    """Thêm các chỉ báo kỹ thuật vào dữ liệu cổ phiếu"""
     data['SMA_20'] = data['Close'].rolling(window=20).mean()
     data['SMA_50'] = data['Close'].rolling(window=50).mean()
     
@@ -37,31 +38,54 @@ def add_indicators(data):
     data.dropna(inplace=True)
     return data
 
+def clean_csv(file_path):
+    """Xử lý lỗi định dạng trong file CSV"""
+    if os.path.exists(file_path):
+        df = pd.read_csv(file_path, index_col=0, parse_dates=True, low_memory=False)
+        
+        # Xóa các cột bị lặp
+        df = df.loc[:, ~df.columns.duplicated()]
+        
+        # Chuẩn hóa tên cột
+        df.columns = [col.strip("(')").split(",")[0].strip() for col in df.columns]
+        
+        # Xóa hàng chứa quá nhiều giá trị trống
+        df.dropna(thresh=len(df.columns) // 2, inplace=True)
+
+        # Lưu lại file đã sửa
+        df.to_csv(file_path, index=True, encoding='utf-8-sig', float_format="%.6f")
+
 for ticker in tickers:
     file_path = os.path.join(save_dir, f"{ticker}_stock.csv")
-    print(f"Đang lưu file tại: {os.path.abspath(file_path)}")
+    print(f"📥 Đang lưu file tại: {os.path.abspath(file_path)}")
 
-    # Kiểm tra nếu file đã tồn tại để đọc dữ liệu cũ
+    # Đọc dữ liệu cũ (nếu có)
     if os.path.exists(file_path):
         df_old = pd.read_csv(file_path, index_col=0, parse_dates=True)
     else:
         df_old = pd.DataFrame()
 
-    print(f"Đang lấy dữ liệu cho: {ticker}")
+    print(f"🔄 Đang lấy dữ liệu cho: {ticker}")
 
-    # Lấy dữ liệu mới nhất
+    # Lấy dữ liệu mới từ Yahoo Finance
     new_data = yf.download(ticker, period='10y', interval='1d')
 
     if new_data.empty:
-        print(f"Không có dữ liệu mới cho {ticker}")
+        print(f"⚠️ Không có dữ liệu mới cho {ticker}")
         continue
 
     new_data = add_indicators(new_data)
 
+    # Gộp dữ liệu cũ và mới
     df = pd.concat([df_old, new_data])
 
+    # Giới hạn số dòng
     df = df.tail(max_rows)
 
+    # Lưu dữ liệu vào file CSV
     df.to_csv(file_path, index=True, encoding='utf-8-sig')
 
-print("Hoàn thành cập nhật dữ liệu!")
+    # Sửa lỗi định dạng file CSV
+    clean_csv(file_path)
+
+print("✅ Hoàn thành cập nhật dữ liệu!")
