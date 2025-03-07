@@ -15,6 +15,8 @@ jobs:
     steps:
     - name: Checkout repo
       uses: actions/checkout@v3
+      with:
+        fetch-depth: 0  # Đảm bảo lấy toàn bộ lịch sử và nhánh từ remote
 
     - name: Set up Python
       uses: actions/setup-python@v3
@@ -26,6 +28,12 @@ jobs:
 
     - name: Run data fetch script
       run: python scripts/fetch_stock_data.py
+
+    - name: Switch to feature/create_models
+      run: |
+        git fetch --all  # Lấy tất cả nhánh từ remote
+        git checkout feature/create_models
+        git pull origin feature_create_models  # Cập nhật code mới nhất từ remote
 
     - name: Commit and push new data
       run: |
