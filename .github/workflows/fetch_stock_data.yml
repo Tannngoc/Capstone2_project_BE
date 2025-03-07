@@ -5,8 +5,12 @@ on:
     branches:
       - feature/create_models
   schedule:
-    - cron: '0 0 * * *'  # Chạy vào 00:00 UTC mỗi ngày
-  workflow_dispatch:  # Cho phép chạy thủ công
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: stock-data-update
+  cancel-in-progress: true
 
 jobs:
   fetch-data:
@@ -16,7 +20,7 @@ jobs:
     - name: Checkout repo
       uses: actions/checkout@v3
       with:
-        fetch-depth: 0  # Đảm bảo lấy toàn bộ lịch sử và nhánh từ remote
+        fetch-depth: 0  # Lấy toàn bộ lịch sử Git
 
     - name: Set up Python
       uses: actions/setup-python@v3
@@ -31,14 +35,19 @@ jobs:
 
     - name: Switch to feature/create_models
       run: |
-        git fetch --all  # Lấy tất cả nhánh từ remote
-        git checkout feature/create_models
-        git pull origin feature/create_models  # Cập nhật code mới nhất từ remote
+        git fetch --all
+        git checkout feature_create_models
+        git reset --hard origin/feature_create_models  # Reset về trạng thái mới nhất trên remote
 
     - name: Commit and push new data
       run: |
         git config --global user.name "Tannngoc"
         git config --global user.email "github-actions@github.com"
+        
         git add *_stock.csv
         git commit -m "Update stock data [$(date)]" || echo "No changes to commit"
-        git push origin feature/create_models
+
+        # Fetch và merge thay đổi từ remote trước khi push
+        git pull --no-edit --strategy-option=ours origin feature_create_models
+
+        git push origin feature_create_models
