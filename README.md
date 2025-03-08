@@ -23,9 +23,12 @@
 
 # 5. Cai dat github action ve may
 # brew install act (mac)
-# run: act -j fetch-data --bind
+
 
 # 6. Cai dat docker
+# link:
+# open docker: open -a Docker
+# run: act -j fetch-data --bind
 
 # Final: Chạy ứng dụng Flask:
 # flask run
