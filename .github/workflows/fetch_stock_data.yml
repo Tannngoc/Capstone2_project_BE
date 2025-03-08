@@ -36,18 +36,25 @@ jobs:
     - name: Switch to feature/create_models
       run: |
         git fetch --all
-        git checkout feature/create_models
-        git reset --hard origin/feature/create_models  # Reset về trạng thái mới nhất trên remote
+        if git show-ref --verify --quiet refs/remotes/origin/feature/create_models; then
+          git checkout feature/create_models
+          git pull origin feature/create_models
+        else
+          git checkout -b feature/create_models
+          git push --set-upstream origin feature/create_models
+        fi
 
     - name: Commit and push new data
       run: |
         git config --global user.name "Tannngoc"
         git config --global user.email "github-actions@github.com"
         
-        git add *_stock.csv
-        git commit -m "Update stock data [$(date)]" || echo "No changes to commit"
+        git add app/db/*.csv  # Chỉ thêm các file CSV trong thư mục lưu trữ
+        if git diff --cached --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "Update stock data [$(date)]"
+          git pull --rebase origin feature/create_models
+          git push origin feature/create_models
+        fi
 
-        # Fetch và merge thay đổi từ remote trước khi push
-        git pull --no-edit --strategy-option=ours origin feature/create_models
-
-        git push origin feature/create_models
