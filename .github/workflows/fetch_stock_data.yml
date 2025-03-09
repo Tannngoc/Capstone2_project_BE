@@ -5,7 +5,7 @@ on:
     branches:
       - feature/create_models
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '0 17 * * *'
   workflow_dispatch:
 
 concurrency:
@@ -15,6 +15,7 @@ concurrency:
 jobs:
   fetch-data:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/feature/create_models' || github.event_name != 'schedule'
 
     steps:
     - name: Checkout repo
@@ -32,6 +33,9 @@ jobs:
 
     - name: Run data fetch script
       run: python scripts/fetch_stock_data.py
+
+    - name: Debug current branch
+      run: echo "Current branch is $(git rev-parse --abbrev-ref HEAD)"
 
     - name: Switch to feature/create_models
       run: |
