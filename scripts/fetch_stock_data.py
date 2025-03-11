@@ -3,15 +3,18 @@ import pandas as pd
 import numpy as np
 import os
 
-# Danh sách mã cổ phiếu muốn lấy dữ liệu
-tickers = ['NVDA', 'TSLA', 'KO', 'IBM']
-max_rows = 2468  # Giới hạn số dòng tối đa
+# Danh sách mã cổ phiếu cần lấy dữ liệu
+TICKERS = ['NVDA', 'TSLA', 'MSFT', 'IBM', 'AAPL']
+MAX_ROWS = 2468
 
-# Hàm tính toán các chỉ báo kỹ thuật và trường dữ liệu bổ sung
+SAVE_DIR = "app/db"
+os.makedirs(SAVE_DIR, exist_ok=True)
+
 def add_indicators(data):
+    """Thêm các chỉ báo kỹ thuật vào dữ liệu cổ phiếu"""
     data['SMA_20'] = data['Close'].rolling(window=20).mean()
     data['SMA_50'] = data['Close'].rolling(window=50).mean()
-
+    
     data['EMA_20'] = data['Close'].ewm(span=20, adjust=False).mean()
     data['EMA_50'] = data['Close'].ewm(span=50, adjust=False).mean()
 
@@ -35,30 +38,75 @@ def add_indicators(data):
     data.dropna(inplace=True)
     return data
 
-# Lặp qua từng cổ phiếu để cập nhật dữ liệu
-for ticker in tickers:
-    file_path = f"{ticker}_stock.csv"
-    print(f"Đang lưu file tại: {os.path.abspath(file_path)}")
+def clean_csv(file_path):
+    """Chuẩn hóa dữ liệu và xóa cột trùng lặp trong CSV"""
+    if os.path.exists(file_path):
+        df = pd.read_csv(file_path, index_col=0, parse_dates=True, low_memory=False)
+        
+        # Xóa các cột bị lặp
+        df = df.loc[:, ~df.columns.duplicated()]
+        
+        # Chuẩn hóa tên cột
+        df.columns = [col.strip("(')").split(",")[0].strip() for col in df.columns]
+        
+        # Xóa hàng chứa quá nhiều giá trị trống
+        df.dropna(thresh=len(df.columns) // 2, inplace=True)
 
-    # Kiểm tra nếu file đã tồn tại để đọc dữ liệu cũ
+        # Lưu lại file đã sửa
+        df.to_csv(file_path, index=True, encoding='utf-8-sig', float_format="%.6f")
+
+def fetch_stock_data(ticker):
+    """Lấy dữ liệu cổ phiếu từ Yahoo Finance"""
+    file_path = os.path.join(SAVE_DIR, f"{ticker}_stock.csv")
+    print(f"📥 Đang lưu file tại: {os.path.abspath(file_path)}")
+
+    # Đọc dữ liệu cũ (nếu có)
     if os.path.exists(file_path):
         df_old = pd.read_csv(file_path, index_col=0, parse_dates=True)
     else:
         df_old = pd.DataFrame()
 
-    print(f"Đang lấy dữ liệu cho: {ticker}")
-    
-    # Lấy dữ liệu mới nhất
-    new_data = yf.download(ticker, period='10y', interval='1d')
+    print(f"🔄 Đang lấy dữ liệu cho: {ticker}")
 
-    if new_data.empty:
-        print(f"Không có dữ liệu mới cho {ticker}")
-        continue
+    try:
+        # Lấy dữ liệu mới từ Yahoo Finance
+        new_data = yf.download(ticker, period='10y', interval='1d')
 
-    new_data = add_indicators(new_data)
+        if new_data.empty:
+            print(f"⚠️ Không có dữ liệu mới cho {ticker}")
+            return
 
-    df = pd.concat([df_old, new_data])
+        # Thêm các chỉ báo kỹ thuật
+        new_data = add_indicators(new_data)
 
-    df = df.tail(max_rows)
+        # Nếu dữ liệu cũ không rỗng, loại bỏ dữ liệu đã tồn tại
+        if not df_old.empty:
+            new_data = new_data[~new_data.index.isin(df_old.index)]
 
-    df.to_csv(file_path, index=True, encoding='utf-8-sig')
+        # Nếu sau khi loại bỏ trùng lặp mà vẫn còn dữ liệu mới, thì mới ghi vào file
+        if not new_data.empty:
+            df_final = pd.concat([df_old, new_data]).sort_index()
+            df_final = df_final.tail(MAX_ROWS)  # Giới hạn số dòng
+
+            # Reset index nếu có MultiIndex
+            if isinstance(df_final.index, pd.MultiIndex):
+                df_final = df_final.reset_index()
+
+            # Lưu dữ liệu vào file CSV
+            df_final.to_csv(file_path, index=True, encoding='utf-8-sig')
+
+            # Chuẩn hóa file CSV (xóa cột trùng lặp)
+            clean_csv(file_path)
+
+            print(f"✅ Đã cập nhật dữ liệu cho {ticker}")
+        else:
+            print(f"⚠️ Không có dữ liệu mới cần thêm vào {ticker}")
+
+    except Exception as e:
+        print(f"❌ Lỗi khi lấy dữ liệu {ticker}: {e}")
+
+# Chạy script cho tất cả mã cổ phiếu
+for ticker in TICKERS:
+    fetch_stock_data(ticker)
+
+print("🎯 Hoàn thành cập nhật dữ liệu!")

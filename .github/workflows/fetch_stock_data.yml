@@ -1,17 +1,27 @@
 name: Fetch Stock Data Daily
 
 on:
+  push:
+    branches:
+      - feature/create_models
   schedule:
-    - cron: '0 0 * * *'  # Chạy vào 00:00 UTC mỗi ngày
-  workflow_dispatch:  # Cho phép chạy thủ công
+    - cron: '0 17 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: stock-data-update
+  cancel-in-progress: true
 
 jobs:
   fetch-data:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/feature/create_models' || github.event_name != 'schedule'
 
     steps:
     - name: Checkout repo
       uses: actions/checkout@v3
+      with:
+        fetch-depth: 0  # Lấy toàn bộ lịch sử Git
 
     - name: Set up Python
       uses: actions/setup-python@v3
@@ -24,10 +34,31 @@ jobs:
     - name: Run data fetch script
       run: python scripts/fetch_stock_data.py
 
+    - name: Debug current branch
+      run: echo "Current branch is $(git rev-parse --abbrev-ref HEAD)"
+
+    - name: Switch to feature/create_models
+      run: |
+        git fetch --all
+        if git show-ref --verify --quiet refs/remotes/origin/feature/create_models; then
+          git checkout feature/create_models
+          git pull origin feature/create_models
+        else
+          git checkout -b feature/create_models
+          git push --set-upstream origin feature/create_models
+        fi
+
     - name: Commit and push new data
       run: |
         git config --global user.name "Tannngoc"
         git config --global user.email "github-actions@github.com"
-        git add *_stock.csv
-        git commit -m "Update stock data [$(date)]" || echo "No changes to commit"
-        git push origin feature/create_models
+        
+        git add app/db/*.csv  # Chỉ thêm các file CSV trong thư mục lưu trữ
+        if git diff --cached --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "Update stock data [$(date)]"
+          git pull --rebase origin feature/create_models
+          git push origin feature/create_models
+        fi
+

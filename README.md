@@ -21,7 +21,16 @@
 # flask db migrate -m "Initial migration"
 # flask db upgrade
 
-# 5. Chạy ứng dụng Flask:
+# 5. Cai dat github action ve may
+# brew install act (mac)
+
+
+# 6. Cai dat docker
+# link:
+# open docker: open -a Docker
+# run: act -j fetch-data --bind
+
+# Final: Chạy ứng dụng Flask:
 # flask run
 
 
