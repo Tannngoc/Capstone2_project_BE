@@ -31,11 +31,13 @@ jobs:
       run: pip install yfinance pandas
 
     - name: Stash changes (if any)
-      run: git stash --include-untracked
-
+      run: |
+        git stash --include-untracked
+        echo "Changes stashed successfully"
+    
     - name: Run data fetch script
       run: python scripts/fetch_stock_data.py
-
+    
     - name: Switch to feature/create_models
       run: |
         git fetch --all
@@ -46,13 +48,16 @@ jobs:
           git checkout -b feature/create_models
           git push --set-upstream origin feature/create_models
         fi
-
+    
+    - name: Apply stashed changes
+      run: git stash pop || echo "No stashed changes to apply"
+    
     - name: Commit and push new data
       run: |
         git config --global user.name "Tannngoc"
         git config --global user.email "github-actions@github.com"
         
-        git add app/db/*.csv  # Chỉ thêm các file CSV trong thư mục lưu trữ
+        git add app/db/*.csv
         if git diff --cached --quiet; then
           echo "No changes to commit"
         else
