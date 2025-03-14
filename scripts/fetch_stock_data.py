@@ -4,7 +4,7 @@ import numpy as np
 import os
 
 # Danh sách mã cổ phiếu cần lấy dữ liệu
-TICKERS = ['NVDA', 'TSLA', 'KO', 'IBM']
+TICKERS = ['NVDA', 'TSLA', 'MSFT', 'IBM', 'AAPL']
 MAX_ROWS = 2468
 
 SAVE_DIR = "app/db"
