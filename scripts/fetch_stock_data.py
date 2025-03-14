@@ -4,7 +4,7 @@ import numpy as np
 import os
 
 # Danh sách mã cổ phiếu cần lấy dữ liệu
-TICKERS = ['NVDA', 'TSLA', 'MSFT', 'IBM', 'AAPL']
+TICKERS = ['NVDA', 'TSLA', 'KO', 'IBM']
 MAX_ROWS = 2468
 
 SAVE_DIR = "app/db"
@@ -76,31 +76,25 @@ def fetch_stock_data(ticker):
             print(f"⚠️ Không có dữ liệu mới cho {ticker}")
             return
 
-        # Thêm các chỉ báo kỹ thuật
         new_data = add_indicators(new_data)
 
-        # Nếu dữ liệu cũ không rỗng, loại bỏ dữ liệu đã tồn tại
-        if not df_old.empty:
-            new_data = new_data[~new_data.index.isin(df_old.index)]
+        # Gộp dữ liệu cũ và mới, tránh trùng lặp
+        df = pd.concat([df_old, new_data]).drop_duplicates().sort_index()
 
-        # Nếu sau khi loại bỏ trùng lặp mà vẫn còn dữ liệu mới, thì mới ghi vào file
-        if not new_data.empty:
-            df_final = pd.concat([df_old, new_data]).sort_index()
-            df_final = df_final.tail(MAX_ROWS)  # Giới hạn số dòng
+        # Giới hạn số dòng
+        df = df.tail(MAX_ROWS)
 
-            # Reset index nếu có MultiIndex
-            if isinstance(df_final.index, pd.MultiIndex):
-                df_final = df_final.reset_index()
+        # Kiểm tra nếu có MultiIndex thì reset về dạng thường
+        if isinstance(df.index, pd.MultiIndex):
+            df = df.reset_index()
 
-            # Lưu dữ liệu vào file CSV
-            df_final.to_csv(file_path, index=True, encoding='utf-8-sig')
+        # Lưu dữ liệu vào file CSV
+        df.to_csv(file_path, index=True, encoding='utf-8-sig')
 
-            # Chuẩn hóa file CSV (xóa cột trùng lặp)
-            clean_csv(file_path)
+        # Chuẩn hóa lại file CSV
+        clean_csv(file_path)
 
-            print(f"✅ Đã cập nhật dữ liệu cho {ticker}")
-        else:
-            print(f"⚠️ Không có dữ liệu mới cần thêm vào {ticker}")
+        print(f"✅ Đã cập nhật dữ liệu cho {ticker}")
 
     except Exception as e:
         print(f"❌ Lỗi khi lấy dữ liệu {ticker}: {e}")
