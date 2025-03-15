@@ -54,6 +54,7 @@ jobs:
           echo "No changes to commit"
         else
           git commit -m "📊 Auto-update stock data [$(date)]"
+          git pull --rebase origin main
           git pull --rebase origin feature/create_models
           git push origin feature/create_models
         fi
