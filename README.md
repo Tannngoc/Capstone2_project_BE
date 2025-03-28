@@ -34,4 +34,18 @@
 # flask run
 
 
+# Fetch data from large branch to child branch
+
+# git checkout subfeature/branch
+
+# git checkout feature/branch
+
+# git pull origin feature/branch
+
+# git checkout subfeature/branch
+
+# git rebase feature/branch
+
+
+
 

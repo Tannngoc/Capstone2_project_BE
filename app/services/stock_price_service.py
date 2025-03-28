@@ -20,3 +20,4 @@ class StockPriceService:
             .order_by(StockPrice.date.asc())
             .all()
         )
+    
