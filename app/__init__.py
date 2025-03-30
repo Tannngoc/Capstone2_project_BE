@@ -32,6 +32,8 @@ def create_app():
 
     # ✅ Import và đăng ký blueprint sau khi db đã init
     from app.views.stock_price_view import stock_price
+    from app.views.order_view import order
     app.register_blueprint(stock_price)
+    app.register_blueprint(order)
 
     return app
