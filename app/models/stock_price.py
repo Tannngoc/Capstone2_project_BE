@@ -15,7 +15,6 @@ class StockPrice(db.Model):
     def __init__(self, stock_id, date, open_price, high_price, low_price, close_price, volume):
         self.stock_id = stock_id
         self.date = date
-        self.year = date.year
         self.open_price = open_price
         self.high_price = high_price
         self.low_price = low_price
@@ -27,11 +26,9 @@ class StockPrice(db.Model):
             "id": self.id,
             "stock_id": self.stock_id,
             "date": self.date.strftime("%Y-%m-%d"),
-            "year": self.year,
             "open_price": float(self.open_price),
             "high_price": float(self.high_price),
             "low_price": float(self.low_price),
             "close_price": float(self.close_price),
             "volume": self.volume
         }
-    
