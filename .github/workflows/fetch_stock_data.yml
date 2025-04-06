@@ -3,9 +3,9 @@ name: Fetch Stock Data Daily
 on:
   push:
     branches:
-      - feature/create_models
+      - demo/app
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '0 0 * * *'  # Chạy hàng ngày lúc 00:00 UTC
   workflow_dispatch:
 
 concurrency:
@@ -20,8 +20,8 @@ jobs:
     - name: Checkout repo
       uses: actions/checkout@v3
       with:
-        fetch-depth: 0  # Lấy toàn bộ lịch sử Git
-        ref: feature/create_models  # Đảm bảo luôn checkout đúng nhánh
+        fetch-depth: 0
+        ref: demo/app
 
     - name: Set up Python
       uses: actions/setup-python@v3
@@ -29,7 +29,9 @@ jobs:
         python-version: '3.9'
 
     - name: Install dependencies
-      run: pip install yfinance pandas
+      run: |
+        pip install yfinance pandas
+        pip install tensorflow scikit-learn  # Thêm thư viện cần thiết để train mô hình
 
     - name: Remove untracked files (if any)
       run: |
@@ -55,6 +57,16 @@ jobs:
         else
           git commit -m "📊 Auto-update stock data [$(date)]"
           git pull --rebase origin main
-          git pull --rebase origin feature/create_models
-          git push origin feature/create_models
-        fi
+          git pull --rebase origin demo/app  # Chuyển sang nhánh demo/app
+          git push origin demo/app
+
+    - name: Wait for 10 minutes (to ensure data is fully updated)
+      run: |
+        echo "⏳ Waiting for 10 minutes before training the model"
+        sleep 600  # Chờ 600 giây (10 phút)
+
+    - name: Train AI Model
+      run: |
+        # Sau khi đợi 10 phút, chạy script train mô hình
+        python AI/train_model.py
+        echo "✅ Model trained and saved successfully"
