@@ -57,8 +57,9 @@ jobs:
         else
           git commit -m "📊 Auto-update stock data [$(date)]"
           git pull --rebase origin main
-          git pull --rebase origin feature/train_AI  # Chuyển sang nhánh feature/train_AI
-          git push origin feature/train_AI
+          git pull --rebase origin demo/app
+          git push origin demo/app
+        fi
 
     - name: Wait for 10 minutes (to ensure data is fully updated)
       run: |
