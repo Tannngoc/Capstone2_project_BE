@@ -9,3 +9,11 @@ class Stock(db.Model):
     
     prices = db.relationship('StockPrice', backref='stock', lazy=True, cascade='all, delete')
     predictions = db.relationship('Prediction', backref='stock', lazy=True, cascade='all, delete')
+
+
+    def __init__(self, symbol, name):
+        self.symbol = symbol.upper()
+        self.name = name.strip()
+
+    def to_dict(self):
+        return {"id": self.id, "symbol": self.symbol, "name": self.name}
