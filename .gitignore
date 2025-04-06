@@ -1,0 +1,20 @@
+venv# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Env
+venv/
+.env
+
+# Jupyter
+.ipynb_checkpoints
+
+# Mac
+.DS_Store
+
+# VSCode
+.vscode/
+
+# Logs
+*.log

@@ -21,9 +21,17 @@
 # flask db migrate -m "Initial migration"
 # flask db upgrade
 
-# 5. Cai dat github action ve may
-# brew install act (mac)
 
+B5: Đưa dữ liệu fetch api từ file csv vào db:
+	bấm nút run chạy file import_csv_data.py
+
+B6: Sau khi thêm dữ liệu vào hoàn tất,
+	chạy dự án: flask run
+
+B7: Test api: http://127.0.0.1:5000/api/stock-price/AAPL/2024/3 (Có thể thay tên doanh nghiệp và thời gian)
+
+# 8. Cai dat github action ve may
+# brew install act (mac)
 
 # 6. Cai dat docker
 # link:
@@ -32,6 +40,3 @@
 
 # Final: Chạy ứng dụng Flask:
 # flask run
-
-
-
