@@ -39,7 +39,8 @@ CREATE INDEX idx_user_roles_role_id ON user_roles (role_id);
 CREATE TABLE stocks (
     id INT AUTO_INCREMENT PRIMARY KEY,
     symbol VARCHAR(10) UNIQUE NOT NULL,
-    name VARCHAR(100) NOT NULL
+    name VARCHAR(100) NOT NULL,
+    exchange VARCHAR(50) NOT NULL
 ) ENGINE=InnoDB;
 
 
@@ -54,13 +55,11 @@ CREATE TABLE stock_prices (
     low_price DECIMAL(10,2) NOT NULL,
     close_price DECIMAL(10,2) NOT NULL,
     volume BIGINT NOT NULL,
-    FOREIGN KEY (stock_id) REFERENCES stocks(id) ON DELETE CASCADE,
     INDEX idx_stock_date (stock_id, date),
     INDEX idx_stock_prices_stock_id_date (stock_id, year, date DESC) -- Tạo INDEX sau khi khai báo STORED
 ) ENGINE=InnoDB;
 
 CREATE INDEX idx_stock_prices_year ON stock_prices (year);
-CREATE UNIQUE INDEX idx_stock_prices_unique ON stock_prices (stock_id, date);
 
 -- 5. Bảng dự đoán AI
 CREATE TABLE IF NOT EXISTS predictions (
@@ -101,7 +100,6 @@ CREATE INDEX idx_orders_executed_at ON orders (executed_at);
 CREATE TABLE IF NOT EXISTS transactions (
     id INT AUTO_INCREMENT PRIMARY KEY,
     order_id INT,
-    user_id INT,
     executed_price DECIMAL(10,2) NOT NULL,
     executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
@@ -165,11 +163,3 @@ BEGIN
 END //
 
 DELIMITER ;
-
-INSERT INTO stocks (symbol, name) 
-	VALUES 
-    		('AAPL', 'Apple Inc.'),
-    		('IBM', 'IBM Corp.'),
-    		('NVDA', 'NVIDIA.'),
-    		('MSFT', 'Microsoft Corp.'),
-    		('TSLA', 'Tesla Inc.');
