@@ -64,10 +64,10 @@ jobs:
     - name: Wait for 10 minutes (to ensure data is fully updated)
       run: |
         echo "⏳ Waiting for 10 minutes before training the model"
-        sleep 600  # Chờ 600 giây (10 phút)
+        sleep 120  # Chờ 600 giây (10 phút)
 
     - name: Train AI Model
       run: |
-        # Sau khi đợi 10 phút, chạy script train mô hình
-        python AI/train_model.py
+        # Sau khi đợi 2 phút, chạy script train mô hình
+        python app/AI/train_model.py
         echo "✅ Model trained and saved successfully"
