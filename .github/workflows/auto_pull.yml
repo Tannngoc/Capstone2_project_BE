@@ -1,0 +1,31 @@
+name: Auto Pull Changes
+
+on:
+  schedule:
+    - cron: '0 1 * * *'
+  workflow_dispatch:
+
+jobs:
+  pull-changes:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Set up Git user
+      run: |
+        git config --global user.name "Tannngoc"
+        git config --global user.email "ngoctan4677@gmail.com"
+
+    - name: Pull latest changes from remote
+      run: |
+        git pull origin feature/train_AI  # Hoặc nhánh cần pull về
+
+    - name: Commit and push if necessary
+      run: |
+        git add .
+        git commit -m "Auto pull changes"
+        git push origin feature/train_AI  # Đảm bảo cập nhật các thay đổi lên remote nếu cần

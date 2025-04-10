@@ -29,8 +29,6 @@ def train_joint_model(data):
     training_data_len = int(len(scaled_data) * 0.95)
     train_data = scaled_data[:training_data_len]
 
-    test_data = scaled_data[training_data_len - 60:]
-
     x_train, y_train = [], []
 
     for i in range(60, len(train_data)):
@@ -47,9 +45,9 @@ def train_joint_model(data):
     model.add(Dense(y_train.shape[1]))
 
     model.compile(optimizer='adam', loss='mean_squared_error')
-
     model.fit(x_train, y_train, batch_size=32, epochs=20, verbose=1)
 
+    # Dự đoán để đánh giá RMSE
     test_data = scaled_data[training_data_len - 60:]
     x_test = [test_data[i-60:i] for i in range(60, len(test_data))]
     x_test = np.array(x_test)
@@ -60,12 +58,26 @@ def train_joint_model(data):
 
     rmse = np.sqrt(np.mean((predictions - actual) ** 2))
     print(f"✅ RMSE toàn tập: {rmse:.2f}")
-    
-    # Lưu mô hình và ghi đè
-    if not os.path.exists('AI'):
-        os.makedirs('AI')
 
-    model.save("AI/joint_stock_model.keras")
-    print("✅ Mô hình đã được ghi đè và lưu thành công!")
+    # === Lưu mô hình về thư mục AI ===
+    model_path = "app/AI/joint_stock_model.keras"
+    model_dir = os.path.dirname(model_path)
+
+    if not os.path.exists(model_dir):
+        os.makedirs(model_dir)
+
+    if os.path.exists(model_path):
+        os.remove(model_path)
+        print("🧹 Đã xóa model cũ.")
+
+    model.save(model_path)
+    print("✅ Mô hình mới đã được lưu thành công!")
 
     return model, scaler, predictions, actual, data[training_data_len:]
+
+# === Main logic ===
+if __name__ == "__main__":
+    print("🚀 Đang load dữ liệu...")
+    data = load_all_stock_closes("app/db")
+    print("✅ Dữ liệu đã sẵn sàng. Đang huấn luyện mô hình...")
+    train_joint_model(data)
