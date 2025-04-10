@@ -50,12 +50,13 @@ jobs:
         run: |
           git config --global user.name "Tannngoc"
           git config --global user.email "github-actions@github.com"
-          
+
           git add app/db/*.csv
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "📊 Auto-update stock data [$(date)]"
+            DATE=$(date)
+            git commit -m "📊 Auto-update stock data [$DATE]"
             git pull --rebase origin main
             git pull --rebase origin feature/train_AI
             git push origin feature/train_AI
@@ -80,7 +81,9 @@ jobs:
           if git diff --cached --quiet; then
             echo "⚠️ No model changes to commit"
           else
-            git commit -m "🧠 Update trained AI model [$(date)]"
+            DATE=$(date)
+            git commit -m "🧠 Update trained AI model [$DATE]"
             git pull --rebase origin feature/train_AI
             git push origin feature/train_AI
             echo "✅ Model committed and pushed"
+          fi
