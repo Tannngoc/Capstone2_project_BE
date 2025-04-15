@@ -34,9 +34,8 @@ def create_app():
     from app.views.stock_price_view import stock_price
     from app.views.order_view import order
     from app.views.ai_api import model_bp
+    app.register_blueprint(model_bp)
     app.register_blueprint(stock_price)
     app.register_blueprint(order)
-    app.register_blueprint(model_bp)
-
 
     return app

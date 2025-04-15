@@ -1,63 +1,138 @@
-from flask import Flask, request, jsonify, Blueprint
+from flask import Blueprint, request, jsonify
 import pandas as pd
-import numpy as np
-import os
 from keras.api.models import load_model
 from sklearn.preprocessing import MinMaxScaler
+import os
 
-model_bp = Blueprint('train_model', __name__, url_prefix="/api/predict")
+# ✅ Đặt prefix rõ ràng
+model_bp = Blueprint("model", __name__, url_prefix="/api/predict")
 
+# ✅ Load mô hình
 MODEL_PATH = "app/AI/joint_stock_model.keras"
-DATA_DIR = "app/db"
-
 model = load_model(MODEL_PATH)
 
-@model_bp.route("/predict", methods=["GET"])
-def predict():
-    symbol = request.args.get("symbol")
-    if not symbol:
-        return jsonify({"error": "Missing stock symbol"}), 400
+# ✅ Danh sách mã cổ phiếu
+stock_codes = ["AAPL", "IBM", "MSFT", "NVDA", "TSLA"]
 
-    file_path = os.path.join(DATA_DIR, f"{symbol}_stock.csv")
-    if not os.path.exists(file_path):
-        return jsonify({"error": "Stock data not found"}), 404
+# ✅ Tiền xử lý input với 5 đặc trưng: Open, High, Low, Close, Volume
+def preprocess_input(df):
+    features = ["Open", "High", "Low", "Close", "Volume"]
+    df = df[features].tail(60)  # lấy 60 ngày gần nhất
+    scaler = MinMaxScaler()
+    data_scaled = scaler.fit_transform(df)  # (60, 5)
+    return data_scaled.reshape(1, 60, 5), scaler
 
-    df = pd.read_csv(file_path)
-    if 'Date' in df.columns:
-        df['Date'] = pd.to_datetime(df['Date'])
-        df.set_index('Date', inplace=True)
+# ✅ Route test đơn giản
+@model_bp.route("/test", methods=["GET"])
+def test_api():
+    print("🔥 TEST API CALLED")
+    return jsonify({"msg": "Test success"})
 
-    data = df[['Close']].values
-    last_price = data[-1][0]
+# ✅ API dự đoán toàn bộ mã cổ phiếu
+@model_bp.route("/all", methods=["GET"])
+def predict_all():
+    print("===> /api/predict/all called")
+    results = []
 
-    # Scale dữ liệu
-    scaler = MinMaxScaler(feature_range=(0, 0.9))
-    scaled_data = scaler.fit_transform(data)
+    for code in stock_codes:
+        print(f"Processing {code}")
+        csv_path = f"app/db/{code}_stock.csv"  # ✅ Đảm bảo tên file đúng
+        if not os.path.exists(csv_path):
+            print(f"{csv_path} not found")
+            continue
 
-    last_60 = scaled_data[-60:]
-    x_input = np.array([last_60])
+        df = pd.read_csv(csv_path)
+        if len(df) < 60:
+            print(f"{code}: Not enough data")
+            continue
 
-    prediction = model.predict(x_input)
-    predicted_price = scaler.inverse_transform(prediction)[0][0]
+        try:
+            input_data, scaler = preprocess_input(df)
+            predicted_scaled = model.predict(input_data, verbose=0)
 
-    # Tính phần trăm thay đổi
-    diff = predicted_price - last_price
-    percent = (diff / last_price) * 100
-    trend = "increase" if diff > 0 else "decrease" if diff < 0 else "no change"
+            # ✅ Đảo ngược chỉ riêng giá Close
+            dummy = [[0, 0, 0, predicted_scaled[0][0], 0]]
+            predicted_price = scaler.inverse_transform(dummy)[0][3]
 
-    # Gợi ý hành động đơn giản (tùy bạn custom thêm):
-    if percent > 1:
-        action = "Buy"
-    elif percent < -1:
-        action = "Sell"
-    else:
-        action = "Keep"
+            current_price = df["Close"].iloc[-1]
+            percent = (predicted_price - current_price) / current_price * 100
+            direction = "increase" if predicted_price > current_price else "decrease"
 
-    return jsonify({
-        "predict": f"{predicted_price:.2f} USD",
-        "type": trend,
-        "percent": f"{percent:.2f}%",
-        "amount": f"{last_price:.2f} USD",
-        "action": action
-    })
+            if percent > 1:
+                action = "Buy"
+            elif percent < -1:
+                action = "Sell"
+            else:
+                action = "Keep"
 
+            result = {
+                "stock_code": code,
+                "predict": f"{predicted_price:.2f} USD",
+                "type": direction,
+                "percent": f"{percent:.2f}%",
+                "amount": f"{current_price:.2f} USD",
+                "action": action
+            }
+
+            print(result)
+            results.append(result)
+
+        except Exception as e:
+            print(f"Error processing {code}: {e}")
+            continue
+
+    return jsonify(results)
+
+# ✅ API dự đoán cho 1 doanh nghiệp cụ thể
+@model_bp.route("/<stock_code>", methods=["GET"])
+def predict_single(stock_code):
+    stock_code = stock_code.upper()
+    print(f"===> /api/predict/{stock_code} called")
+
+    if stock_code not in stock_codes:
+        return jsonify({"error": "Stock code not supported"}), 400
+
+    csv_path = f"app/db/{stock_code}_stock.csv"
+    if not os.path.exists(csv_path):
+        return jsonify({"error": f"No data found for {stock_code}"}), 404
+
+    df = pd.read_csv(csv_path)
+    if len(df) < 60:
+        return jsonify({"error": f"Not enough data for {stock_code}"}), 400
+
+    try:
+        input_data, scaler = preprocess_input(df)
+        predicted_scaled = model.predict(input_data, verbose=0)
+
+        # ✅ Đảo ngược chỉ riêng giá Close
+        dummy = [[0, 0, 0, predicted_scaled[0][0], 0]]
+        predicted_price = scaler.inverse_transform(dummy)[0][3]
+
+        current_price = df["Close"].iloc[-1]
+        percent = (predicted_price - current_price) / current_price * 100
+        direction = "increase" if predicted_price > current_price else "decrease"
+
+        if percent > 1:
+            action = "Buy"
+        elif percent < -1:
+            action = "Sell"
+        else:
+            action = "Keep"
+
+        result = {
+            "stock_code": stock_code,
+            "predict": f"{predicted_price:.2f} USD",
+            "type": direction,
+            "percent": f"{percent:.2f}%",
+            "amount": f"{current_price:.2f} USD",
+            "action": action
+        }
+
+        return jsonify(result)
+
+    except Exception as e:
+        print(f"Error processing {stock_code}: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+# http://127.0.0.1:5000/api/predict/all
