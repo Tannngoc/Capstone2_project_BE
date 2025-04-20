@@ -50,7 +50,7 @@ jobs:
       - name: Import stock data into DB
         run: |
           echo "⏳ Importing stock data into database..."
-          python app/scripts/import_csv_data.py
+          python import_csv_data.py
           echo "✅ Stock data imported into database successfully"
 
       - name: Commit and push new data
