@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 import pandas as pd
-from keras.src.saving import load_model
+from keras.src.saving.saving_api import load_model
 from sklearn.preprocessing import MinMaxScaler
 import os
 
