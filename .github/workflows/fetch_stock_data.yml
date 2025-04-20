@@ -30,8 +30,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install yfinance pandas
-          pip install tensorflow scikit-learn
+          pip install -r requirements.txt
+        
 
       - name: Remove untracked files (if any)
         run: |
