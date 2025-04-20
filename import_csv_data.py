@@ -27,11 +27,9 @@ def import_csv(file_path, stock_symbol):
         for _, row in df.iterrows():
             date = datetime.strptime(row['Price'], "%Y-%m-%d")
 
-            # Kiểm tra xem đã có dòng nào cho stock_id + date chưa
             existing = StockPrice.query.filter_by(stock_id=stock_id, date=date).first()
 
             if existing:
-                # Cập nhật nếu đã có
                 existing.open_price = row['Open']
                 existing.high_price = row['High']
                 existing.low_price = row['Low']
@@ -39,7 +37,6 @@ def import_csv(file_path, stock_symbol):
                 existing.volume = row['Volume']
                 updated_count += 1
             else:
-                # Thêm mới nếu chưa có
                 new_price = StockPrice(
                     stock_id=stock_id,
                     date=date,
