@@ -32,7 +32,7 @@ jobs:
         run: |
           pip install yfinance pandas
           pip install tensorflow scikit-learn
-          pip install flask sqlalchemy  # Thêm các thư viện cần thiết cho việc tương tác với DB
+          pip install flask flask_sqlalchemy
 
       - name: Remove untracked files (if any)
         run: |
