@@ -44,7 +44,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt
+          pip install flask
+          pip install yfinance pandas
+          pip install tensorflow scikit-learn
 
       - name: Wait for MySQL to be ready
         run: |
