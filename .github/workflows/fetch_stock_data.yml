@@ -32,6 +32,7 @@ jobs:
         run: |
           pip install yfinance pandas
           pip install tensorflow scikit-learn
+          pip install flask sqlalchemy  # Thêm các thư viện cần thiết cho việc tương tác với DB
 
       - name: Remove untracked files (if any)
         run: |
@@ -45,6 +46,12 @@ jobs:
 
       - name: Run data fetch script
         run: python scripts/fetch_stock_data.py
+
+      - name: Import stock data into DB
+        run: |
+          echo "⏳ Importing stock data into database..."
+          python app/scripts/import_csv_data.py
+          echo "✅ Stock data imported into database successfully"
 
       - name: Commit and push new data
         run: |
@@ -86,4 +93,3 @@ jobs:
             git pull --rebase origin feature/train_AI
             git push origin feature/train_AI
             echo "✅ Model committed and pushed"
-          fi
