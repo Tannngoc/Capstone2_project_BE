@@ -19,18 +19,22 @@ jobs:
     services:
       mysql:
         image: mysql:5.7
+        env:
+          MYSQL_ROOT_PASSWORD: tan12321
+          MYSQL_DATABASE: starfall
         ports:
           - 3306:3306
-        env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: starfall
-          MYSQL_USER: user
-          MYSQL_PASSWORD: password
         options: >-
           --health-cmd="mysqladmin ping --silent"
           --health-interval=10s
           --health-timeout=5s
-          --health-retries=5
+          --health-retries=3
+
+    env:
+      FLASK_APP: app
+      FLASK_ENV: development
+      SECRET_KEY: C2SE23
+      DATABASE_URI: mysql+pymysql://root:tan12321@mysql:3306/starfall  # Thay localhost bằng mysql
 
     steps:
       - name: Checkout repo
