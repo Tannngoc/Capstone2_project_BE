@@ -12,7 +12,7 @@ def get_stock_id(symbol):
     return stock.id if stock else None
 
 def import_csv(file_path, stock_symbol):
-    """Import dữ liệu từ CSV vào bảng stock_prices"""
+    """Import dữ liệu từ CSV vào bảng stock_prices với upsert"""
     df = pd.read_csv(file_path)
 
     with app.app_context():
@@ -21,22 +21,39 @@ def import_csv(file_path, stock_symbol):
             print(f"⚠ Lỗi: Không tìm thấy {stock_symbol} trong bảng stocks!")
             return
 
-        stock_prices = [
-            StockPrice(
-                stock_id=stock_id,
-                date=datetime.strptime(row['Price'], "%Y-%m-%d"),
-                open_price=row['Open'],
-                high_price=row['High'],
-                low_price=row['Low'],
-                close_price=row['Close'],
-                volume=row['Volume']
-            )
-            for _, row in df.iterrows()
-        ]
+        imported_count = 0
+        updated_count = 0
 
-        db.session.bulk_save_objects(stock_prices)  # Thêm nhanh nhiều dòng
+        for _, row in df.iterrows():
+            date = datetime.strptime(row['Price'], "%Y-%m-%d")
+
+            # Kiểm tra xem đã có dòng nào cho stock_id + date chưa
+            existing = StockPrice.query.filter_by(stock_id=stock_id, date=date).first()
+
+            if existing:
+                # Cập nhật nếu đã có
+                existing.open_price = row['Open']
+                existing.high_price = row['High']
+                existing.low_price = row['Low']
+                existing.close_price = row['Close']
+                existing.volume = row['Volume']
+                updated_count += 1
+            else:
+                # Thêm mới nếu chưa có
+                new_price = StockPrice(
+                    stock_id=stock_id,
+                    date=date,
+                    open_price=row['Open'],
+                    high_price=row['High'],
+                    low_price=row['Low'],
+                    close_price=row['Close'],
+                    volume=row['Volume']
+                )
+                db.session.add(new_price)
+                imported_count += 1
+
         db.session.commit()
-        print(f"✅ Imported {len(df)} rows for {stock_symbol}")
+        print(f"✅ Imported {imported_count} new rows, updated {updated_count} rows for {stock_symbol}")
 
 if __name__ == "__main__":
     folder_path = "app/db"  # Thư mục chứa CSV
