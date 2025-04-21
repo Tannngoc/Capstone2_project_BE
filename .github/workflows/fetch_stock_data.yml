@@ -23,7 +23,7 @@ jobs:
           MYSQL_DATABASE: starfall
         ports:
           - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5 --default-authentication-plugin=mysql_native_password
 
     steps:
       - name: Checkout repo
@@ -54,6 +54,14 @@ jobs:
 
       - name: Run data fetch script
         run: python scripts/fetch_stock_data.py
+
+      - name: Wait for MySQL to be ready
+        run: |
+          until mysqladmin ping -h mysql -u root -ptan12321 --silent; do
+            echo "⏳ Waiting for MySQL..."
+            sleep 2
+          done
+          echo "✅ MySQL is ready"
 
       - name: Import CSV data into database (Upsert)
         run: |
@@ -99,5 +107,3 @@ jobs:
             git commit -m "📊 Auto-update stock data [$DATE]"
             git push origin feature/train_AI
             echo "✅ Data committed and pushed"
-          fi
-  
