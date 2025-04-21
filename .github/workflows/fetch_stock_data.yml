@@ -20,12 +20,15 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: tan12321  # Đặt mật khẩu root
-          MYSQL_DATABASE: starfall  # Đặt tên database nếu cần
+          MYSQL_ROOT_PASSWORD: tan12321
+          MYSQL_DATABASE: starfall
         ports:
-          - 3306:3306  # Cổng mà MySQL sẽ sử dụng
-        options: --health-cmd="mysqladmin ping --silent" --health-timeout=30s --health-start-period=5s
-
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
 
     steps:
       - name: Checkout repo
