@@ -13,9 +13,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  fetch-data:
+  test:
     runs-on: ubuntu-latest
-
     services:
       mysql:
         image: mysql:8.0
@@ -24,11 +23,7 @@ jobs:
           MYSQL_DATABASE: starfall
         ports:
           - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping --silent"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=10
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
 
     steps:
       - name: Checkout repo
