@@ -30,14 +30,15 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
-
+  
       - name: Test DB connection
         run: |
-          mysql --protocol=TCP -h localhost \
-                --port 3306 \
+          mysql --host=127.0.0.1 \
+                --port=3306 \
                 -uroot \
                 -ptan12321 \
                 -e "SHOW DATABASES;"
+  
   
       - name: Remove untracked files (if any)
         run: |
