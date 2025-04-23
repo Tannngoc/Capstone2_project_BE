@@ -15,20 +15,6 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: tan12321
-          MYSQL_DATABASE: starfall
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping -h mysql -u root -ptan12321"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -45,6 +31,20 @@ jobs:
         run: |
           pip install -r requirements.txt
         
+      - name: Set up environment variables
+        run: |
+          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
+          echo "DATABASE_URL=mysql+pymysql://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ secrets.DB_HOST }}:${{ secrets.DB_PORT }}/${{ secrets.DB_NAME }}" >> .env
+          echo "FLASK_APP=app" >> .env
+          echo "FLASK_ENV=development" >> .env
+      - name: Test DB connection
+        run: |
+          mysql -h ${{ secrets.DB_HOST }} \
+                -P ${{ secrets.DB_PORT }} \
+                -u${{ secrets.DB_USER }} \
+                -p${{ secrets.DB_PASSWORD }} \
+                -e "USE ${{ secrets.DB_NAME }}; SHOW TABLES;"
+
 
       - name: Remove untracked files (if any)
         run: |
@@ -59,21 +59,8 @@ jobs:
       - name: Run data fetch script
         run: python scripts/fetch_stock_data.py
 
-      - name: Wait for MySQL to be ready
-        run: |
-          until mysqladmin ping -h mysql -u root -ptan12321 --silent; do
-            echo "⏳ Waiting for MySQL..."
-            sleep 2
-          done
-          echo "✅ MySQL is ready"
-
       - name: Run data fetch script
         run: python scripts/fetch_stock_data.py
-
-      - name: Import CSV data into database (Upsert)
-        run: |
-          python import_csv_data.py
-          echo "✅ Imported CSV data into database"
 
       - name: Commit and push new data
         run: |
