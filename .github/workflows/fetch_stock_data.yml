@@ -5,7 +5,7 @@ on:
     branches:
       - feature/train_AI
   schedule:
-    - cron: '0 0 * * *'  # Chạy hàng ngày lúc 00:00 UTC
+    - cron: '0 0 * * *'
   workflow_dispatch:
 
 concurrency:
@@ -30,19 +30,31 @@ jobs:
       - name: Install MySQL
         run: sudo apt-get update && sudo apt-get install -y mysql-server
 
-      - name: Stop MySQL to reset password
+      - name: Stop MySQL service (if running)
         run: sudo service mysql stop
 
-      - name: Start MySQL without auth to reset root password
+      - name: Start MySQL in safe mode without password check
         run: |
-          sudo mysqld_safe --skip-grant-tables > /dev/null 2>&1 &
-          sleep 10  # Đợi chắc chắn MySQL đã khởi động
+          sudo nohup mysqld_safe --skip-grant-tables --skip-networking > /tmp/mysql.log 2>&1 &
+          sleep 10  # chờ MySQL khởi động
+
+      - name: Check MySQL socket before resetting password
+        run: |
+          for i in {1..5}; do
+            if [ -S /var/run/mysqld/mysqld.sock ]; then
+              echo "✅ MySQL socket is ready"
+              break
+            else
+              echo "⏳ Waiting for MySQL socket..."
+              sleep 2
+            fi
+          done
 
       - name: Reset MySQL root password
         run: |
           mysql -u root -e "FLUSH PRIVILEGES; ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'tan12321'; FLUSH PRIVILEGES;"
 
-      - name: Restart MySQL normally
+      - name: Restart MySQL
         run: sudo service mysql restart
 
       - name: Test DB connection
@@ -52,15 +64,10 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Remove untracked files (if any)
+      - name: Remove untracked files
         run: |
           git clean -fd
-          echo "✅ Removed untracked files"
-
-      - name: Reset local changes
-        run: |
           git reset --hard
-          echo "✅ Reset local changes"
 
       - name: Run data fetch script
         run: python scripts/fetch_stock_data.py
@@ -81,17 +88,15 @@ jobs:
             git push origin feature/train_AI
           fi
 
-      - name: Wait for 5 seconds (to ensure data is fully updated)
-        run: |
-          echo "⏳ Waiting for 5 seconds before training the model"
-          sleep 5
+      - name: Wait before training
+        run: sleep 5
 
       - name: Train AI Model
         run: |
           python app/AI/train_model.py
-          echo "✅ Model trained and saved successfully"
+          echo "✅ Model trained successfully"
 
-      - name: Commit and push new data (after training)
+      - name: Commit and push new model data
         run: |
           git config --global user.name "Tannngoc"
           git config --global user.email "github-actions@github.com"
