@@ -24,10 +24,11 @@ jobs:
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -u root -ptan12321"
+          --health-cmd="mysqladmin ping -h mysql -u root -ptan12321"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -65,6 +66,9 @@ jobs:
             sleep 2
           done
           echo "✅ MySQL is ready"
+
+      - name: Run data fetch script
+        run: python scripts/fetch_stock_data.py
 
       - name: Import CSV data into database (Upsert)
         run: |
