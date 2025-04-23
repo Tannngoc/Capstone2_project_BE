@@ -30,7 +30,7 @@ jobs:
       - name: Test local DB connection
         run: |
           echo "Testing local MySQL..."
-          mysql -h 127.0.0.1 --port 3306 -uroot -ptan12321 -e "SHOW DATABASES;"
+          mysql -h localhost --port 3306 -uroot -ptan12321 -e "SHOW DATABASES;"
         
       - name: Install dependencies
         run: |
