@@ -27,8 +27,15 @@ jobs:
         with:
           python-version: '3.9'
 
+      - name: Install MySQL
+        run: sudo apt-get update && sudo apt-get install -y mysql-server
+        
+      - name: Start MySQL service
+        run: sudo service mysql start
+  
       - name: Test DB connection
-        run: mysql -h localhost --port 3306 -uroot -ptan12321 -e "Show databases;"
+        run: mysql -h localhost --port 3306 -uroot -ptan12321 -e "SHOW DATABASES;"
+
 
       - name: Install dependencies
         run: |
