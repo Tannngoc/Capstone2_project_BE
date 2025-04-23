@@ -58,9 +58,6 @@ jobs:
       - name: Run data fetch script
         run: python scripts/fetch_stock_data.py
 
-      - name: Run data fetch script
-        run: python scripts/fetch_stock_data.py
-
       - name: Commit and push new data
         run: |
           git config --global user.name "Tannngoc"
@@ -87,7 +84,7 @@ jobs:
           python app/AI/train_model.py
           echo "✅ Model trained and saved successfully"
 
-      - name: Commit and push new data
+      - name: Commit and push new data (after training)
         run: |
           git config --global user.name "Tannngoc"
           git config --global user.email "github-actions@github.com"
