@@ -68,14 +68,14 @@ jobs:
 
       - name: Run import_csv_data.py
         run: |
-          python scripts/import_csv_data.py
+          python import_csv_data.py
           echo "✅ Data imported successfully into MySQL"
 
       - name: Commit and push new data
         run: |
           git config --global user.name "Tannngoc"
           git config --global user.email "github-actions@github.com"
-
+  
           git add app/db/*.csv
           if git diff --cached --quiet; then
             echo "No changes to commit"
@@ -86,27 +86,29 @@ jobs:
             git pull --rebase origin feature/train_AI
             git push origin feature/train_AI
           fi
-
+  
       - name: Wait for 5 seconds (to ensure data is fully updated)
         run: |
           echo "⏳ Waiting for 5 seconds before training the model"
           sleep 5
-
+  
       - name: Train AI Model
         run: |
           python app/AI/train_model.py
           echo "✅ Model trained and saved successfully"
-
-      - name: Commit and push new data (after training)
+  
+      - name: Commit and push trained model
         run: |
           git config --global user.name "Tannngoc"
           git config --global user.email "github-actions@github.com"
   
-          git add app/db/*.csv
+          git add app/AI/joint_stock_model.keras
           if git diff --cached --quiet; then
-            echo "✅ No data changes to commit"
+            echo "⚠️ No model changes to commit"
           else
             DATE=$(date)
-            git commit -m "📊 Auto-update stock data [$DATE]"
+            git commit -m "🧠 Update trained AI model [$DATE]"
+            git pull --rebase origin feature/train_AI
             git push origin feature/train_AI
-            echo "✅ Data committed and pushed"
+            echo "✅ Model committed and pushed"
+          fi
