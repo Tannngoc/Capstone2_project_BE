@@ -33,10 +33,10 @@ jobs:
 
       - name: Test DB connection
         run: |
-          mysql --protocol=TCP -h ${{ secrets.DB_HOST }} \
+          mysql --protocol=TCP -h localhost \
                 --port 3306 \
-                -u${{ secrets.DB_USER }} \
-                -p${{ secrets.DB_PASSWORD }} \
+                -uroot \
+                -ptan12321 \
                 -e "SHOW DATABASES;"
   
       - name: Remove untracked files (if any)
