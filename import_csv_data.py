@@ -11,6 +11,12 @@ def get_stock_id(symbol):
     stock = Stock.query.filter_by(symbol=symbol).first()
     return stock.id if stock else None
 
+def create_tables():
+    """Tạo bảng nếu chưa tồn tại"""
+    with app.app_context():
+        db.create_all()  # Tạo tất cả các bảng được định nghĩa trong models.py
+        print("✅ Đã tạo bảng (nếu chưa có).")
+
 def import_csv(file_path, stock_symbol):
     """Import dữ liệu từ CSV vào bảng stock_prices với upsert"""
     df = pd.read_csv(file_path)
@@ -53,6 +59,8 @@ def import_csv(file_path, stock_symbol):
         print(f"✅ Imported {imported_count} new rows, updated {updated_count} rows for {stock_symbol}")
 
 if __name__ == "__main__":
+    create_tables()  # Đảm bảo các bảng tồn tại
+
     folder_path = "app/db"  # Thư mục chứa CSV
     stock_files = ["AAPL_stock.csv", "IBM_stock.csv", "MSFT_stock.csv", "NVDA_stock.csv", "TSLA_stock.csv"]
 
@@ -65,4 +73,3 @@ if __name__ == "__main__":
                 import_csv(file_path, stock_symbol)
             else:
                 print(f"⚠ File {file_name} không tồn tại!")
-
