@@ -26,31 +26,10 @@ jobs:
         uses: actions/setup-python@v3
         with:
           python-version: '3.9'
-
-      - name: Install MySQL
-        run: sudo apt-get update && sudo apt-get install -y mysql-server
-          
-      - name: Start MySQL service
-        run: sudo service mysql start
-  
-      - name: Configure MySQL root user
-        run: |
-          sudo service mysql stop
-          sudo mysqld_safe --skip-grant-tables &
-          sleep 5
-          mysql -u root <<EOF
-          FLUSH PRIVILEGES;
-          ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'tan12321';
-          FLUSH PRIVILEGES;
-          EOF
-          sudo service mysql restart
-      
       
       - name: Test DB connection
-        run: mysql -h localhost --port 3306 -uroot -ptan12321 -e "SHOW DATABASES;"
-      
-      - name: Test DB connection
-        run: mysql -h localhost --port 3306 -uroot -ptan12321 -e "SHOW DATABASES;"
+        run: mysql -h ${{ secrets.DB_HOSTNAME }} --port 3306 -u${{ secrets.DB_USER }} -p${{ secrets.DB_PASSWORD }} -e "SHOW DATABASES;"
+    
         
       - name: Install dependencies
         run: |
