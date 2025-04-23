@@ -30,24 +30,15 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
-        
-      - name: Set up environment variables
-        run: |
-          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
-          echo "DATABASE_URL=mysql+pymysql://${{ secrets.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ secrets.DB_HOST }}:${{ secrets.DB_PORT }}/${{ secrets.DB_NAME }}" >> .env
-          echo "FLASK_APP=app" >> .env
-          echo "FLASK_ENV=development" >> .env
 
       - name: Test DB connection
         run: |
-          mysql --protocol=TCP -h ${{ secrets.DB_HOST }} \
-                -P ${{ secrets.DB_PORT }} \
+          mysql -h ${{ secrets.DB_HOST }} \
+                --port 3306 \
                 -u${{ secrets.DB_USER }} \
                 -p${{ secrets.DB_PASSWORD }} \
-                -e "USE ${{ secrets.DB_NAME }}; SHOW TABLES;"
+                -e "SHOW DATABASES;"
         
-
-
       - name: Remove untracked files (if any)
         run: |
           git clean -fd
