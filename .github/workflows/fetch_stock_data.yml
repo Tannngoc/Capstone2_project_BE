@@ -27,18 +27,12 @@ jobs:
         with:
           python-version: '3.9'
 
+      - name: Test DB connection
+        run: mysql -h localhost --port 3306 -uroot -ptan12321 -e "Show databases;"
+
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
-  
-      - name: Test DB connection
-        run: |
-          mysql --host=127.0.0.1 \
-                --port=3306 \
-                -uroot \
-                -ptan12321 \
-                -e "SHOW DATABASES;"
-  
   
       - name: Remove untracked files (if any)
         run: |
