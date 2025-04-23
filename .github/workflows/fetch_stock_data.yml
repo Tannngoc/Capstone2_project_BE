@@ -33,12 +33,12 @@ jobs:
 
       - name: Test DB connection
         run: |
-          mysql -h ${{ secrets.DB_HOST }} \
+          mysql --protocol=TCP -h ${{ secrets.DB_HOST }} \
                 --port 3306 \
                 -u${{ secrets.DB_USER }} \
                 -p${{ secrets.DB_PASSWORD }} \
                 -e "SHOW DATABASES;"
-        
+  
       - name: Remove untracked files (if any)
         run: |
           git clean -fd
