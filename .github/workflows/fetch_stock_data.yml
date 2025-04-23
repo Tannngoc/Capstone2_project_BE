@@ -27,9 +27,10 @@ jobs:
         with:
           python-version: '3.9'
       
-      - name: Test DB connection
-        run: mysql -h ${{ secrets.DB_HOSTNAME }} --port 3306 -u${{ secrets.DB_USER }} -p${{ secrets.DB_PASSWORD }} -e "SHOW DATABASES;"
-    
+      - name: Test local DB connection
+        run: |
+          echo "Testing local MySQL..."
+          mysql -h 127.0.0.1 --port 3306 -uroot -ptan12321 -e "SHOW DATABASES;"
         
       - name: Install dependencies
         run: |
