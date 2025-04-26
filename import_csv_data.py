@@ -4,21 +4,22 @@ from app import create_app, db
 from app.models import StockPrice, Stock
 from datetime import datetime
 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Tắt warning TensorFlow nếu cần
+
 app = create_app()
 
 def get_stock_id(symbol):
-    """Lấy stock_id từ bảng stocks dựa trên symbol"""
     stock = Stock.query.filter_by(symbol=symbol).first()
     return stock.id if stock else None
 
 def create_tables():
-    """Tạo bảng nếu chưa tồn tại"""
     with app.app_context():
-        db.create_all()  # Tạo tất cả các bảng được định nghĩa trong models.py
+        db.create_all()
         print("✅ Đã tạo bảng (nếu chưa có).")
 
 def import_csv(file_path, stock_symbol):
     df = pd.read_csv(file_path)
+    df['Price'] = pd.to_datetime(df['Price'])
 
     with app.app_context():
         stock_id = get_stock_id(stock_symbol)
@@ -26,25 +27,31 @@ def import_csv(file_path, stock_symbol):
             print(f"⚠ Lỗi: Không tìm thấy {stock_symbol} trong bảng stocks!")
             return
 
-        imported_count = 0
-        updated_count = 0
-        
-        existing_prices = StockPrice.query.filter_by(stock_id=stock_id).all()
-        existing_dates = {price.date: price for price in existing_prices}
+        # Query toàn bộ date đang có
+        existing_dates = set(
+            date for (date,) in db.session.query(StockPrice.date)
+            .filter_by(stock_id=stock_id)
+            .all()
+        )
+
+        new_rows = []
+        update_count = 0
+        insert_count = 0
 
         for _, row in df.iterrows():
-            date = datetime.strptime(row['Price'], "%Y-%m-%d")
-
+            date = row['Price']
             if date in existing_dates:
-                existing = existing_dates[date]
-                existing.open_price = row['Open']
-                existing.high_price = row['High']
-                existing.low_price = row['Low']
-                existing.close_price = row['Close']
-                existing.volume = row['Volume']
-                updated_count += 1
+                # Update existing records
+                db.session.query(StockPrice).filter_by(stock_id=stock_id, date=date).update({
+                    'open_price': row['Open'],
+                    'high_price': row['High'],
+                    'low_price': row['Low'],
+                    'close_price': row['Close'],
+                    'volume': row['Volume']
+                })
+                update_count += 1
             else:
-                new_price = StockPrice(
+                new_rows.append(StockPrice(
                     stock_id=stock_id,
                     date=date,
                     open_price=row['Open'],
@@ -52,26 +59,29 @@ def import_csv(file_path, stock_symbol):
                     low_price=row['Low'],
                     close_price=row['Close'],
                     volume=row['Volume']
-                )
-                db.session.add(new_price)
-                imported_count += 1
+                ))
+                insert_count += 1
+
+        # Bulk insert tất cả record mới
+        if new_rows:
+            db.session.bulk_save_objects(new_rows)
 
         db.session.commit()
-        print(f"✅ Imported {imported_count} new rows, updated {updated_count} rows for {stock_symbol}")
-
+        print(f"✅ Imported {insert_count} new rows, updated {update_count} rows for {stock_symbol}")
 
 if __name__ == "__main__":
-    create_tables()  # Đảm bảo các bảng tồn tại
+    create_tables()
 
-    folder_path = "app/db"  # Thư mục chứa CSV
+    folder_path = "app/db"
     stock_files = ["AAPL_stock.csv", "IBM_stock.csv", "MSFT_stock.csv", "NVDA_stock.csv", "TSLA_stock.csv"]
 
     with app.app_context():
         for file_name in stock_files:
-            stock_symbol = file_name.split("_")[0]  # Tự động lấy mã chứng khoán từ tên file
+            stock_symbol = file_name.split("_")[0]
             file_path = os.path.join(folder_path, file_name)
 
             if os.path.exists(file_path):
                 import_csv(file_path, stock_symbol)
             else:
                 print(f"⚠ File {file_name} không tồn tại!")
+
