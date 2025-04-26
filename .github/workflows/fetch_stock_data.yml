@@ -26,28 +26,6 @@ jobs:
         uses: actions/setup-python@v3
         with:
           python-version: '3.9'
-
-      - name: Clean up previous containerd installation
-        run: |
-          sudo apt-get remove --purge -y containerd containerd.io
-      
-      - name: Set up Docker
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker.io
-          sudo systemctl enable --now docker
-          docker --version
-  
-      - name: Run MySQL container
-        run: |
-          docker run --name mysql-container -e MYSQL_ROOT_PASSWORD=tan12321 -e MYSQL_DATABASE=starfall -p 3306:3306 -d mysql:latest
-          sleep 10  # Đợi MySQL khởi động
-  
-      - name: Test DB connection
-        run: |
-          # Kiểm tra kết nối MySQL với user root và mật khẩu đã cấu hình
-          docker exec mysql-container mysql -u root -ptan12321 -e "use starfall;"
-  
         
       - name: Install dependencies
         run: |
@@ -66,10 +44,14 @@ jobs:
       - name: Run data fetch script
         run: python scripts/fetch_stock_data.py
 
-      - name: Run import_csv_data.py
+      - name: Import CSV into Railway DB
+        env:
+          DATABASE_URL: mysql+pymysql://root:laWNoLofJbQijtCMaRmHMHFjIBZDqdZO@nozomi.proxy.rlwy.net:29683/starfall
         run: |
+          echo "📥 Importing data into Railway DB"
           python import_csv_data.py
-          echo "✅ Data imported successfully into MySQL"
+          echo "✅ Data imported into Railway DB successfully"
+
 
       - name: Commit and push new data
         run: |

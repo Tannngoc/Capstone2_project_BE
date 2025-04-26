@@ -18,7 +18,6 @@ def create_tables():
         print("✅ Đã tạo bảng (nếu chưa có).")
 
 def import_csv(file_path, stock_symbol):
-    """Import dữ liệu từ CSV vào bảng stock_prices với upsert"""
     df = pd.read_csv(file_path)
 
     with app.app_context():
@@ -29,13 +28,15 @@ def import_csv(file_path, stock_symbol):
 
         imported_count = 0
         updated_count = 0
+        
+        existing_prices = StockPrice.query.filter_by(stock_id=stock_id).all()
+        existing_dates = {price.date: price for price in existing_prices}
 
         for _, row in df.iterrows():
             date = datetime.strptime(row['Price'], "%Y-%m-%d")
 
-            existing = StockPrice.query.filter_by(stock_id=stock_id, date=date).first()
-
-            if existing:
+            if date in existing_dates:
+                existing = existing_dates[date]
                 existing.open_price = row['Open']
                 existing.high_price = row['High']
                 existing.low_price = row['Low']
@@ -57,6 +58,7 @@ def import_csv(file_path, stock_symbol):
 
         db.session.commit()
         print(f"✅ Imported {imported_count} new rows, updated {updated_count} rows for {stock_symbol}")
+
 
 if __name__ == "__main__":
     create_tables()  # Đảm bảo các bảng tồn tại
