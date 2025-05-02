@@ -30,14 +30,12 @@ def import_csv(file_path, stock_symbol):
             .all()
         }
 
-        # 🔥 Lọc lại DataFrame: chỉ giữ những ngày chưa có trong DB
         new_rows = df[~df['Price'].apply(lambda d: datetime.strptime(d, "%Y-%m-%d") in existing_dates)]
 
         if new_rows.empty:
             print(f"✅ Không có dữ liệu mới cho {stock_symbol}")
             return
 
-        # 🔥 Chuyển new_rows thành list đối tượng StockPrice
         stock_prices = [
             StockPrice(
                 stock_id=stock_id,
@@ -56,12 +54,12 @@ def import_csv(file_path, stock_symbol):
         print(f"✅ Imported {len(new_rows)} NEW rows for {stock_symbol}")
 
 if __name__ == "__main__":
-    folder_path = "app/db"  # Thư mục chứa CSV
+    folder_path = "app/db"
     stock_files = ["AAPL_stock.csv", "IBM_stock.csv", "MSFT_stock.csv", "NVDA_stock.csv", "TSLA_stock.csv"]
 
     with app.app_context():
         for file_name in stock_files:
-            stock_symbol = file_name.split("_")[0]  # Tự động lấy mã chứng khoán từ tên file
+            stock_symbol = file_name.split("_")[0]
             file_path = os.path.join(folder_path, file_name)
 
             if os.path.exists(file_path):
