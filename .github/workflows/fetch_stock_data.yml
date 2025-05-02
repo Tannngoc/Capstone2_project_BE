@@ -13,9 +13,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  fetch-data:
+  test:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -27,12 +26,11 @@ jobs:
         uses: actions/setup-python@v3
         with:
           python-version: '3.9'
-
+        
       - name: Install dependencies
         run: |
-          pip install yfinance pandas
-          pip install tensorflow scikit-learn
-
+          pip install -r requirements.txt
+  
       - name: Remove untracked files (if any)
         run: |
           git clean -fd
@@ -46,11 +44,20 @@ jobs:
       - name: Run data fetch script
         run: python scripts/fetch_stock_data.py
 
+      - name: Import CSV into Railway DB
+        env:
+          DATABASE_URL: mysql+pymysql://root:laWNoLofJbQijtCMaRmHMHFjIBZDqdZO@nozomi.proxy.rlwy.net:29683/starfall
+        run: |
+          echo "📥 Importing data into Railway DB"
+          python import_csv_data.py
+          echo "✅ Data imported into Railway DB successfully"
+
+
       - name: Commit and push new data
         run: |
           git config --global user.name "Tannngoc"
           git config --global user.email "github-actions@github.com"
-
+  
           git add app/db/*.csv
           if git diff --cached --quiet; then
             echo "No changes to commit"
@@ -61,22 +68,22 @@ jobs:
             git pull --rebase origin feature/train_AI
             git push origin feature/train_AI
           fi
-
+  
       - name: Wait for 5 seconds (to ensure data is fully updated)
         run: |
           echo "⏳ Waiting for 5 seconds before training the model"
           sleep 5
-
+  
       - name: Train AI Model
         run: |
           python app/AI/train_model.py
           echo "✅ Model trained and saved successfully"
-
+  
       - name: Commit and push trained model
         run: |
           git config --global user.name "Tannngoc"
           git config --global user.email "github-actions@github.com"
-
+  
           git add app/AI/joint_stock_model.keras
           if git diff --cached --quiet; then
             echo "⚠️ No model changes to commit"

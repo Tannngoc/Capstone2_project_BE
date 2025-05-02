@@ -86,6 +86,7 @@ def fetch_stock_data(ticker):
     # Làm sạch file sau khi cập nhật
     clean_csv(file_path)
     print(f"✅ Đã tạo file dữ liệu mới cho {ticker}")
+    print(f"🔍 Ngày cuối cùng trong dữ liệu {ticker}: {new_data.index[-1].strftime('%Y-%m-%d')}")
 
 
 # Chạy script cho tất cả mã cổ phiếu
