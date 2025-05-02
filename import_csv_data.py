@@ -4,6 +4,8 @@ from app import create_app, db
 from app.models import StockPrice, Stock
 from datetime import datetime
 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
 app = create_app()
 
 def get_stock_id(symbol):
@@ -12,7 +14,7 @@ def get_stock_id(symbol):
     return stock.id if stock else None
 
 def import_csv(file_path, stock_symbol):
-    """Import dữ liệu từ CSV vào bảng stock_prices với upsert"""
+    """Import dữ liệu từ CSV vào bảng stock_prices, bỏ qua dữ liệu đã tồn tại"""
     df = pd.read_csv(file_path)
 
     with app.app_context():
@@ -21,48 +23,46 @@ def import_csv(file_path, stock_symbol):
             print(f"⚠ Lỗi: Không tìm thấy {stock_symbol} trong bảng stocks!")
             return
 
-        imported_count = 0
-        updated_count = 0
+        # 🔥 Lấy tất cả ngày đã có trong database
+        existing_dates = {
+            date for (date,) in db.session.query(StockPrice.date)
+            .filter_by(stock_id=stock_id)
+            .all()
+        }
 
-        for _, row in df.iterrows():
-            date = datetime.strptime(row['Price'], "%Y-%m-%d")
+        new_rows = df[~df['Price'].apply(lambda d: datetime.strptime(d, "%Y-%m-%d") in existing_dates)]
 
-            existing = StockPrice.query.filter_by(stock_id=stock_id, date=date).first()
+        if new_rows.empty:
+            print(f"✅ Không có dữ liệu mới cho {stock_symbol}")
+            return
 
-            if existing:
-                existing.open_price = row['Open']
-                existing.high_price = row['High']
-                existing.low_price = row['Low']
-                existing.close_price = row['Close']
-                existing.volume = row['Volume']
-                updated_count += 1
-            else:
-                new_price = StockPrice(
-                    stock_id=stock_id,
-                    date=date,
-                    open_price=row['Open'],
-                    high_price=row['High'],
-                    low_price=row['Low'],
-                    close_price=row['Close'],
-                    volume=row['Volume']
-                )
-                db.session.add(new_price)
-                imported_count += 1
+        stock_prices = [
+            StockPrice(
+                stock_id=stock_id,
+                date=datetime.strptime(row['Price'], "%Y-%m-%d"),
+                open_price=row['Open'],
+                high_price=row['High'],
+                low_price=row['Low'],
+                close_price=row['Close'],
+                volume=row['Volume']
+            )
+            for _, row in new_rows.iterrows()
+        ]
 
+        db.session.bulk_save_objects(stock_prices)
         db.session.commit()
-        print(f"✅ Imported {imported_count} new rows, updated {updated_count} rows for {stock_symbol}")
+        print(f"✅ Imported {len(new_rows)} NEW rows for {stock_symbol}")
 
 if __name__ == "__main__":
-    folder_path = "app/db"  # Thư mục chứa CSV
+    folder_path = "app/db"
     stock_files = ["AAPL_stock.csv", "IBM_stock.csv", "MSFT_stock.csv", "NVDA_stock.csv", "TSLA_stock.csv"]
 
     with app.app_context():
         for file_name in stock_files:
-            stock_symbol = file_name.split("_")[0]  # Tự động lấy mã chứng khoán từ tên file
+            stock_symbol = file_name.split("_")[0]
             file_path = os.path.join(folder_path, file_name)
 
             if os.path.exists(file_path):
                 import_csv(file_path, stock_symbol)
             else:
                 print(f"⚠ File {file_name} không tồn tại!")
-
