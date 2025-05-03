@@ -5,7 +5,7 @@ on:
     branches:
       - feature/train_AI
   schedule:
-    - cron: '0 0 * * *'  # Chạy hàng ngày lúc 00:00 UTC
+    - cron: '0 0 * * *'
   workflow_dispatch:
 
 concurrency:
