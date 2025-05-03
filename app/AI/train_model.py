@@ -12,11 +12,19 @@ def load_all_stock_closes(folder_path):
     for file in csv_files:
         path = os.path.join(folder_path, file)
         df = pd.read_csv(path)
-        if 'Price' in df.columns:
+        
+        if 'Date' not in df.columns and 'Price' in df.columns:
             df.rename(columns={'Price': 'Date'}, inplace=True)
-        df['Date'] = pd.to_datetime(df['Date'], format="%Y-%m-%d")
-        df.set_index('Date', inplace=True)
-        close_data.append(df[['Close']].rename(columns={'Close': file.split('_')[0]}))
+
+        if 'Date' in df.columns and 'Close' in df.columns:
+            df['Date'] = pd.to_datetime(df['Date'], format="%Y-%m-%d")
+            df.set_index('Date', inplace=True)
+            close_data.append(df[['Close']].rename(columns={'Close': file.split('_')[0]}))
+        else:
+            print(f"⚠️ File {file} thiếu cột 'Date' hoặc 'Close', bỏ qua.")
+
+    if not close_data:
+        raise ValueError("❗ Không có file hợp lệ để huấn luyện mô hình.")
     
     merged = pd.concat(close_data, axis=1)
     merged.dropna(inplace=True)
