@@ -1,6 +1,5 @@
 from app import db
 from app.models import StockPrice, Stock
-from datetime import datetime
 
 class StockPriceService:
     @staticmethod
