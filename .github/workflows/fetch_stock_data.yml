@@ -74,11 +74,7 @@ jobs:
             DATE=$(date)
             git commit -m "📊 Auto-update stock data [$DATE]"
 
-            git add -A
-            git stash --include-untracked
             git pull --rebase origin feature/train_AI
-            git stash pop || true
-
             git push origin feature/train_AI
           fi
 
@@ -100,12 +96,7 @@ jobs:
           else
             DATE=$(date)
             git commit -m "🧠 Update trained AI model [$DATE]"
-
-            git add -A
-            git stash --include-untracked
             git pull --rebase origin feature/train_AI
-            git stash pop || true
-
             git push origin feature/train_AI
             echo "✅ Model committed and pushed"
           fi
