@@ -1,7 +1,6 @@
 import yfinance as yf
 import pandas as pd
 import os
-import time
 
 # Danh sách mã cổ phiếu cần lấy dữ liệu
 TICKERS = ['NVDA', 'TSLA', 'MSFT', 'IBM', 'AAPL']
@@ -64,43 +63,30 @@ def fetch_stock_data(ticker):
 
     print(f"📥 Đang lưu file mới tại: {os.path.abspath(file_path)}")
 
-    # Tải dữ liệu mới từ yfinance với retry
-    attempt = 0
-    while attempt < 3:
-        try:
-            print(f"🔄 Đang lấy dữ liệu cho: {ticker}")
-            new_data = yf.download(ticker, period='10y', interval='1d')
+    # Tải dữ liệu mới từ yfinance
+    print(f"🔄 Đang lấy dữ liệu cho: {ticker}")
+    new_data = yf.download(ticker, period='10y', interval='1d')
 
-            if new_data.empty:
-                print(f"⚠️ Không có dữ liệu mới cho {ticker}")
-                return
+    if new_data.empty:
+        print(f"⚠️ Không có dữ liệu mới cho {ticker}")
+        return
 
-            # Thêm chỉ báo kỹ thuật
-            new_data = add_indicators(new_data)
+    # Thêm chỉ báo kỹ thuật
+    new_data = add_indicators(new_data)
 
-            # Giới hạn số dòng tối đa
-            new_data = new_data.tail(MAX_ROWS)
+    # Giới hạn số dòng tối đa
+    new_data = new_data.tail(MAX_ROWS)
 
-            # Xóa cột bị lặp (nếu có)
-            new_data = new_data.loc[:, ~new_data.columns.duplicated()]
+    # Xóa cột bị lặp (nếu có)
+    new_data = new_data.loc[:, ~new_data.columns.duplicated()]
 
-            # Lưu dữ liệu mới vào file
-            new_data.to_csv(file_path, index=True, encoding='utf-8-sig')
+    # Lưu dữ liệu mới vào file
+    new_data.to_csv(file_path, index=True, encoding='utf-8-sig')
 
-            # Làm sạch file sau khi cập nhật
-            clean_csv(file_path)
-            print(f"✅ Đã tạo file dữ liệu mới cho {ticker}")
-            print(f"🔍 Ngày cuối cùng trong dữ liệu {ticker}: {new_data.index[-1].strftime('%Y-%m-%d')}")
-            break  # Thoát khỏi vòng lặp khi thành công
-
-        except yf.YFRateLimitError as e:
-            print(f"❌ Lỗi rate-limited khi tải {ticker}. Thử lại sau...")
-            attempt += 1
-            time.sleep(10)  # Chờ 10 giây trước khi thử lại
-
-        except Exception as e:
-            print(f"❌ Lỗi tải dữ liệu cho {ticker}: {e}")
-            break  # Nếu có lỗi khác, dừng lại và không thử lại
+    # Làm sạch file sau khi cập nhật
+    clean_csv(file_path)
+    print(f"✅ Đã tạo file dữ liệu mới cho {ticker}")
+    print(f"🔍 Ngày cuối cùng trong dữ liệu {ticker}: {new_data.index[-1].strftime('%Y-%m-%d')}")
 
 
 # Chạy script cho tất cả mã cổ phiếu
