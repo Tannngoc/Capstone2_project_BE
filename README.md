@@ -9,6 +9,8 @@
 
 # 2. Cài các thư viện:
 # pip install -r requirements.txt
+# pip install -r requirements.txt --use-deprecated=legacy-resolver
+
 
 # 4. Khởi tạo db:
 # Chạy file starfall.sql trong mysql
