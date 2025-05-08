@@ -73,10 +73,17 @@ jobs:
           else
             DATE=$(date)
             git commit -m "📊 Auto-update stock data [$DATE]"
+            
+            # 🛠️ FIX: stash any untracked/unstaged changes to avoid rebase errors
+            git stash --include-untracked
 
             git pull --rebase origin feature/train_AI
+
+            git stash pop || true  # recover uncommitted files (if safe to do so)
+
             git push origin feature/train_AI
           fi
+  
 
       - name: Train AI model
         run: |
