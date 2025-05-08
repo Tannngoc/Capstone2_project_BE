@@ -35,12 +35,17 @@ jobs:
         run: |
           git clean -fd
           echo "✅ Removed untracked files"
+
       - name: Reset local changes
         run: |
           git reset --hard
           echo "✅ Reset local changes"
+
       - name: Run data fetch script
         run: python scripts/fetch_stock_data.py
+
+      - name: Run news fetch script daily
+        run: python scripts/fetch_news_daily.py
 
       - name: Import CSV into Railway DB
         env:
@@ -49,6 +54,8 @@ jobs:
           echo "📥 Importing data into Railway DB"
           python import_csv_data.py
           echo "✅ Data imported into Railway DB successfully"
+
+
       - name: Commit and push new data
         run: |
           git config --global user.name "Tannngoc"
