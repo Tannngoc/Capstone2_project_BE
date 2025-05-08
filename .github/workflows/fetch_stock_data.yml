@@ -13,8 +13,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
+  fetch-and-train:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -22,29 +23,33 @@ jobs:
           fetch-depth: 0
           ref: feature/train_AI
 
+      - name: Install system dependencies for Chrome
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libglib2.0-0 libnss3 libgconf-2-4 \
+            libfontconfig1 libxss1 libappindicator3-1 \
+            libasound2 libatk-bridge2.0-0 libgtk-3-0 \
+            fonts-liberation xdg-utils
+
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
           python-version: '3.9'
-        
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-  
-      - name: Remove untracked files (if any)
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Clean workspace
         run: |
           git clean -fd
-          echo "✅ Removed untracked files"
-
-      - name: Reset local changes
-        run: |
           git reset --hard
-          echo "✅ Reset local changes"
+          echo "✅ Workspace cleaned"
 
-      - name: Run data fetch script
+      - name: Run stock data fetch script
         run: python scripts/fetch_stock_data.py
 
-      - name: Run news fetch script daily
+      - name: Run news fetch script
         run: python scripts/fetch_news_daily.py
 
       - name: Import CSV into Railway DB
@@ -53,47 +58,52 @@ jobs:
         run: |
           echo "📥 Importing data into Railway DB"
           python import_csv_data.py
-          echo "✅ Data imported into Railway DB successfully"
-
+          echo "✅ Data imported"
 
       - name: Commit and push new data
         run: |
           git config --global user.name "Tannngoc"
           git config --global user.email "github-actions@github.com"
-  
+
           git add app/db/*.csv
           if git diff --cached --quiet; then
-            echo "No changes to commit"
+            echo "No CSV changes to commit"
           else
             DATE=$(date)
             git commit -m "📊 Auto-update stock data [$DATE]"
-            git pull --rebase origin main
+
+            git add -A
+            git stash --include-untracked
             git pull --rebase origin feature/train_AI
+            git stash pop || true
+
             git push origin feature/train_AI
           fi
-  
-      - name: Wait for 5 seconds (to ensure data is fully updated)
+
+      - name: Train AI model
         run: |
-          echo "⏳ Waiting for 5 seconds before training the model"
+          echo "⏳ Waiting 5 seconds..."
           sleep 5
-  
-      - name: Train AI Model
-        run: |
           python app/AI/train_model.py
-          echo "✅ Model trained and saved successfully"
-  
+          echo "✅ Model trained"
+
       - name: Commit and push trained model
         run: |
           git config --global user.name "Tannngoc"
           git config --global user.email "github-actions@github.com"
-  
+
           git add app/AI/joint_stock_model.keras
           if git diff --cached --quiet; then
             echo "⚠️ No model changes to commit"
           else
             DATE=$(date)
             git commit -m "🧠 Update trained AI model [$DATE]"
+
+            git add -A
+            git stash --include-untracked
             git pull --rebase origin feature/train_AI
+            git stash pop || true
+
             git push origin feature/train_AI
             echo "✅ Model committed and pushed"
           fi
