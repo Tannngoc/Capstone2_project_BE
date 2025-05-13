@@ -59,7 +59,17 @@ jobs:
         run: python scripts/fetch_stock_data.py
 
       - name: Run news fetch script daily
-        run: python scripts/fetch_news_daily.py
+        run: |
+          # Start Xvfb (virtual display) in the background
+          sudo apt-get install -y xvfb
+          Xvfb :99 -ac &
+
+          # Export display so Chrome knows where to render
+          export DISPLAY=:99
+
+          echo "📥 Fetching daily news"
+          python scripts/fetch_news_daily.py
+
 
       - name: Import CSV into Railway DB
         env:
