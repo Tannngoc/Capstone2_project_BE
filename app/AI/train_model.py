@@ -2,8 +2,8 @@ import os
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
-from keras.api.models import Sequential
-from keras.api.layers import LSTM, Dense, Dropout
+from keras.src.models import Sequential
+from keras.src.layers import LSTM, Dense, Dropout
 
 def load_all_stock_closes(folder_path):
     close_data = []
