@@ -2,7 +2,7 @@ from app.models.user import User
 from app.models.role import Role
 from app.models.user_role import UserRole
 from app import db
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, create_refresh_token
 
 def register_user(username, email, password):
     if User.query.filter((User.username == username) | (User.email == email)).first():
@@ -13,7 +13,7 @@ def register_user(username, email, password):
     db.session.add(user)
     db.session.commit()
 
-    default_role = Role.query.filter_by(name="admin").first()
+    default_role = Role.query.filter_by(name="investor").first()
     if default_role:
         user_role = UserRole(user_id=user.id, role_id=default_role.id)
         db.session.add(user_role)
@@ -27,10 +27,18 @@ def register_user(username, email, password):
 def login_user(username, password):
     user = User.query.filter_by(username=username).first()
     if user and user.check_password(password):
-        token = create_access_token(identity=user.id)
+        access_token = create_access_token(identity=user.id)
+        refresh_token = create_refresh_token(identity=user.id)
+
         roles = db.session.query(Role.name)\
             .join(UserRole, UserRole.role_id == Role.id)\
             .filter(UserRole.user_id == user.id).all()
         role_names = [r[0] for r in roles]
-        return {"access_token": token, "username": user.username, "roles": role_names}
+
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "username": user.username,
+            "roles": role_names
+        }
     return None
