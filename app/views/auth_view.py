@@ -14,3 +14,7 @@ def login():
 @auth_bp.route("/profile", methods=["GET"])
 def profile():
     return auth_controller.profile()
+
+@auth_bp.route("/token/refresh", methods=["POST"])
+def refresh_token():
+    return auth_controller.refresh_token()

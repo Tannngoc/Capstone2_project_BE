@@ -35,6 +35,10 @@ def create_app():
     from app.views.role_view import role_bp
     from app.views.user_role_view import user_role_bp
 
+    app.config["JWT_SECRET_KEY"] = "your-secret"
+    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = 60 
+    app.config["JWT_REFRESH_TOKEN_EXPIRES"] = 60
+
     app.register_blueprint(role_bp)
     app.register_blueprint(model_bp)
     app.register_blueprint(stock_price)
