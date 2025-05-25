@@ -34,6 +34,8 @@ def create_app():
     from app.views.auth_view import auth_bp
     from app.views.role_view import role_bp
     from app.views.user_role_view import user_role_bp
+    from app.views.user_view import user
+
 
     app.config["JWT_SECRET_KEY"] = os.getenv("SECRET_KEY")
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = 60 
@@ -45,5 +47,6 @@ def create_app():
     app.register_blueprint(order)
     app.register_blueprint(auth_bp)
     app.register_blueprint(user_role_bp)
+    app.register_blueprint(user)
 
     return app
