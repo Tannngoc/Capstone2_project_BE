@@ -19,7 +19,7 @@ def add_role_to_user(user_id: int, role_name: str):
     user_role = UserRole(user_id=user.id, role_id=role.id)
     db.session.add(user_role)
     db.session.commit()
-    db.session.refresh(user)  # 🔁 Cập nhật user.roles nếu dùng lại
+    db.session.refresh(user)
 
     return {"message": f"Role '{role_name}' added to user '{user.username}'."}, 200
 

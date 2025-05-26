@@ -6,6 +6,7 @@ from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from dotenv import load_dotenv
 from config import Config
+from flask_mail import Mail
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(basedir, '../.env'))
@@ -13,6 +14,7 @@ load_dotenv(os.path.join(basedir, '../.env'))
 db = SQLAlchemy()
 migrate = Migrate()
 jwt = JWTManager()
+mail = Mail()
 
 def create_app():
     app = Flask(__name__, static_url_path="/static")
@@ -22,6 +24,7 @@ def create_app():
 
     db.init_app(app)
     migrate.init_app(app, db)
+    mail.init_app(app)
     jwt.init_app(app)
 
     with app.app_context():
@@ -34,7 +37,7 @@ def create_app():
     from app.views.auth_view import auth_bp
     from app.views.role_view import role_bp
     from app.views.user_role_view import user_role_bp
-    from app.views.user_view import user
+    from app.views.user_view import user_bp
 
 
     app.config["JWT_SECRET_KEY"] = os.getenv("SECRET_KEY")
@@ -47,6 +50,6 @@ def create_app():
     app.register_blueprint(order)
     app.register_blueprint(auth_bp)
     app.register_blueprint(user_role_bp)
-    app.register_blueprint(user)
+    app.register_blueprint(user_bp)
 
     return app
