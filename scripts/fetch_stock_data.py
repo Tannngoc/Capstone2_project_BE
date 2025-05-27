@@ -65,7 +65,7 @@ def fetch_stock_data(ticker):
 
     # Tải dữ liệu mới từ yfinance
     print(f"🔄 Đang lấy dữ liệu cho: {ticker}")
-    new_data = yf.download(ticker, period='10y', interval='1d')
+    new_data = yf.download(ticker, period='10y', interval='1d', threads=False)
 
     if new_data.empty:
         print(f"⚠️ Không có dữ liệu mới cho {ticker}")
