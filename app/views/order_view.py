@@ -5,10 +5,15 @@ order = Blueprint('orders', __name__, url_prefix="/api/orders")
 
 @order.route("/place", methods=["POST"])
 def place_order():
-    """API đặt lệnh mua/bán"""
     data = request.get_json()
-    response, status = OrderController.place_order(data)
-    return jsonify(response), status
+    if not data:
+        return jsonify({"error": "Thiếu hoặc sai định dạng JSON"}), 400
+
+    result = OrderController.place_order(data)
+    if isinstance(result, tuple):
+        return jsonify(result[0]), result[1]
+    return jsonify(result), 200
+
 
 @order.route("/user/<int:user_id>", methods=["GET"])
 def get_orders_by_user(user_id):

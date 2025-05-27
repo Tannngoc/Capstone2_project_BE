@@ -51,7 +51,6 @@ def train_joint_model(data):
     model.add(LSTM(64, return_sequences=False))
     model.add(Dropout(0.2))
     model.add(Dense(y_train.shape[1]))
-
     model.compile(optimizer='adam', loss='mean_squared_error')
     model.fit(x_train, y_train, batch_size=32, epochs=20, verbose=1)
 
