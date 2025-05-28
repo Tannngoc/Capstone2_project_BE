@@ -38,6 +38,7 @@ def create_app():
     from app.views.role_view import role_bp
     from app.views.user_role_view import user_role_bp
     from app.views.user_view import user_bp
+    from app.views.news_view import news_bp
 
 
     app.config["JWT_SECRET_KEY"] = os.getenv("SECRET_KEY")
@@ -51,5 +52,6 @@ def create_app():
     app.register_blueprint(auth_bp)
     app.register_blueprint(user_role_bp)
     app.register_blueprint(user_bp)
+    app.register_blueprint(news_bp)
 
     return app
