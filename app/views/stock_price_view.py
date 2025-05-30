@@ -8,3 +8,7 @@ def get_stock_of_month(symbol, year, month):
     data, status = StockPriceController.get_stock_of_month(symbol, year, month)
     return jsonify(data), status
 
+@stock_price.route("/latest-summary", methods=["GET"])
+def latest_stock_summary():
+    data, status = StockPriceController.get_latest_stock_summary()
+    return jsonify(data), status
