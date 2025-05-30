@@ -10,3 +10,10 @@ class StockPriceController:
 
         stock_prices = StockPriceService.get_stock_of_month(stock_id, year, month)
         return [sp.to_dict() for sp in stock_prices], 200
+
+    @staticmethod
+    def get_latest_stock_summary():
+        data = StockPriceService.get_latest_stock_summary()
+        return data, 200
+    
+    
