@@ -29,15 +29,16 @@ class OrderService:
         subject = f"Xác nhận lệnh {order_type.upper()} cổ phiếu {stock_symbol} - Starfall Predict Stock"
 
         body = (
-            f"Kính gửi {user.username},\n\n"
-            f"Chúng tôi xin xác nhận rằng bạn đã đặt lệnh {order_type.upper()} với các thông tin sau:\n"
-            f"• Mã cổ phiếu: {stock_symbol}\n"
-            f"• Số lượng: {quantity}\n"
-            f"• Giá đặt: {price}\n"
-            f"• Mã lệnh: {order.id}\n"
-            f"• Trạng thái: {order.status}\n\n"
-            "Nếu bạn có bất kỳ thắc mắc nào, vui lòng liên hệ bộ phận hỗ trợ khách hàng: +84918809264.\n\n"
-            "Trân trọng,\n"
+            f"Dear {user.username},\n\n"
+            f"We confirm that you have successfully placed a {order_type.upper()} order with the following details:\n"
+            f"• Stock symbol: {stock_symbol}\n"
+            f"• Quantity: {quantity}\n"
+            f"• Order price: {price}\n"
+            f"• Order ID: {order.id}\n"
+            f"• Status: {order.status}\n"
+            f"• Total amount: {quantity * price}\n\n"
+            "If you have any questions, please contact our customer support at +84918809264.\n\n"
+            "Best regards,\n"
             "Starfall Predict Stock"
         )
         send_email(user.email, subject, body)
