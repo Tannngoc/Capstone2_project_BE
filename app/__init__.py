@@ -19,7 +19,7 @@ mail = Mail()
 def create_app():
     app = Flask(__name__, static_url_path="/static")
 
-    CORS(app, resources={r'/*': {'origins': '*'}})
+    CORS(app, resources={r"/api/*": {"origins": "http://localhost:5173"}})
     app.config.from_object(Config)
 
     db.init_app(app)
